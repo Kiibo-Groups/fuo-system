@@ -34,7 +34,8 @@ return new class extends Migration
                 'Recibido en sucursal',
                 'Disponible',
                 'Separado',
-                'Vendido'
+                'Vendido',
+                'No Procesado'
             ])->default('Pedido en tránsito');
 
             $table->foreignId('current_branch_id')->nullable()->constrained('branches')->onDelete('set null');
