@@ -382,7 +382,7 @@ class GeneratorController extends Controller
     {
         $userBranchId = Auth::user()->branch_id;
         
-        $query = Generator::where('current_branch_id', $userBranchId)->where('status', 'Disponible')->where('is_active', true);
+        $query = Generator::where('current_branch_id', $userBranchId)->where('status', 'Disponible');
 
         if ($request->filled('search')) {
             $search = $request->search;
