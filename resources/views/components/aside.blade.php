@@ -1,12 +1,20 @@
-<aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden lg:flex flex-col border-r border-slate-800">
-    <div class="p-6 flex items-center gap-3">
-        <div class="bg-orange-500 p-2 rounded-lg text-slate-900">
-            <i class="fas fa-charging-station text-xl"></i>
+<!-- Mobile Backdrop -->
+<div id="mobileBackdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm" onclick="closeSidebar()"></div>
+
+<aside id="mainSidebar" class="w-[80%] max-w-[280px] sm:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col border-r border-slate-800 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl lg:shadow-none h-[100dvh]">
+    <div class="p-6 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="bg-orange-500 p-2 rounded-lg text-slate-900">
+                <i class="fas fa-charging-station text-xl"></i>
+            </div>
+            <span class="text-white font-bold text-xl tracking-tight">GEN-CONTROL</span>
         </div>
-        <span class="text-white font-bold text-xl tracking-tight">GEN-CONTROL</span>
+        <button onclick="closeSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
+            <i class="fas fa-times text-xl"></i>
+        </button>
     </div>
 
-    <nav class="flex-1 px-4 space-y-1">
+    <nav class="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
         
         @if(Auth::user()->role === 'admin' || Auth::user()->role === 'owner')
             <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mb-2">Principal</p>
