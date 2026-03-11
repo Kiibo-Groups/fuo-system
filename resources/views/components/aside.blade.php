@@ -4,10 +4,10 @@
 <aside id="mainSidebar" class="w-[80%] max-w-[280px] sm:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col border-r border-slate-800 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl lg:shadow-none h-[100dvh]">
     <div class="p-6 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-            <div class="bg-orange-500 p-2 rounded-lg text-slate-900">
-                <i class="fas fa-charging-station text-xl"></i>
+            <div class="p-2">
+               <img src="{{ asset('assets/images/icon.jpeg') }}" alt="Logo" class="w-10 h-10 object-contain rounded-full">
             </div>
-            <span class="text-white font-bold text-xl tracking-tight">GEN-CONTROL</span>
+            <span class="text-white font-bold text-lg tracking-tight">FUO-CONTROL</span>
         </div>
         <button onclick="closeSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
             <i class="fas fa-times text-xl"></i>

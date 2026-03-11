@@ -271,6 +271,7 @@ class GeneratorController extends Controller
                   ->orWhere('internal_folio', 'like', "%{$search}%");
             });
         }
+
         if ($request->filled('branch_id')) {
             $query->where('current_branch_id', $request->branch_id);
         }
@@ -362,9 +363,8 @@ class GeneratorController extends Controller
                 $costo  = trim($data[3] ?? '');
 
                 // El modelo es el único campo estrictamente obligatorio
-                if (empty($modelo)) {
-                    $failed++;
-                    continue;
+                if (empty($modelo) || strtoupper($modelo) === 'N/A' || strtoupper($modelo) === 'NA') {
+                    $modelo = $modelo . '-' . $rowNum;
                 }
 
                 if (empty($folio) || strtoupper($folio) === 'N/A' || strtoupper($folio) === 'NA') {
@@ -372,7 +372,7 @@ class GeneratorController extends Controller
                 }
 
                 if (empty($serie) || strtoupper($serie) === 'N/A' || strtoupper($serie) === 'NA') {
-                    $serie = 'N/A-' . strtoupper(substr(uniqid(), -6));
+                    $serie = 'FUO-SL-' . strtoupper(substr(uniqid(), -6));
                 }
 
                 // Limpiar caracteres del costo

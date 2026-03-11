@@ -4,10 +4,10 @@
  
 <div class="text-center mb-8">
     <div
-        class="inline-block bg-slate-900 p-4 rounded-2xl shadow-xl transform -rotate-3 hover:rotate-0 transition-all duration-300 mb-4">
-        <i class="fas fa-charging-station text-orange-500 text-3xl"></i>
+        class="inline-block p-4 rounded-2xl shadow-xl transform  mb-4">
+        <img src="{{ asset('assets/images/icon.jpeg') }}" alt="Logo" class="w-28 h-28 object-contain">
     </div>
-    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">GEN-CONTROL</h1>
+    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">FUO-CONTROL</h1>
     <p class="text-slate-500 font-medium mt-1 uppercase text-xs tracking-widest">Gestión de Generadores v1.0</p>
 </div>
 
