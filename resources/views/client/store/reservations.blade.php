@@ -39,7 +39,7 @@
                 <thead class="bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200 dark:border-slate-700/50">
                     <tr>
                         <th class="px-6 py-4">Equipo Separado</th>
-                        <th class="px-6 py-4">Costo Total</th>
+                        <th class="px-6 py-4">Precio de Venta</th>
                         <th class="px-6 py-4">Fecha Expiración</th>
                         <th class="px-6 py-4 text-center">Estado</th>
                     </tr>
@@ -53,7 +53,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-bold text-slate-700 dark:text-slate-300">
-                                    ${{ number_format($reservation->generator->cost, 2) }}
+                                    ${{ number_format($reservation->generator->sale_price ?? 0, 2) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">

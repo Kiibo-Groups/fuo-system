@@ -10,7 +10,12 @@ class Shipment extends Model
         'generator_id', 
         'shipping_company', 
         'tracking_number', 
-        'photo_evidence_path'
+        'photo_evidence_path',
+        'evidences'
+    ];
+
+    protected $casts = [
+        'evidences' => 'array',
     ];
 
     public function generator() {

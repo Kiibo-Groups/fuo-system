@@ -87,6 +87,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/generators/{generator}/qr', [GeneratorController::class, 'generateQRCode'])->name('generators.qr');
         Route::resource('generators', GeneratorController::class);
         Route::post('/generators/{generator}/receive', [GeneratorController::class, 'receiveInWarehouse'])->name('generators.receive');
+        Route::post('/generators/{generator}/release', [GeneratorController::class, 'releaseReservation'])->name('generators.release');
 
         // Control de Refacciones
         Route::get('/spare-parts/export/excel', [SparePartController::class, 'exportExcel'])->name('spare-parts.export.excel');

@@ -27,6 +27,13 @@
                          data-search="{{ strtolower($generator->internal_folio . ' ' . $generator->model . ' ' . $generator->serial_number) }}"
                          onclick="addToCart(this)">
                         
+                        <div class="mb-3 object-cover rounded-xl border border-slate-100 bg-slate-50 w-full h-32 flex items-center justify-center overflow-hidden">
+                            @if($generator->image)
+                                <img src="{{ Storage::url($generator->image) }}" alt="{{ $generator->model }}" class="w-full h-full object-cover">
+                            @else
+                                <i class="fas fa-image text-slate-300 text-3xl"></i>
+                            @endif
+                        </div>
                         <div class="text-xs text-slate-400 font-mono mb-1">FO: {{ $generator->internal_folio }}</div>
                         <h3 class="font-bold text-slate-900 text-sm line-clamp-2 mb-2">{{ $generator->model }}</h3>
                         <div class="flex items-center justify-between mt-autpt-2 border-t border-slate-50">

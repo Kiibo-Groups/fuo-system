@@ -189,6 +189,48 @@
             </div>
             @endif
 
+            @if($generator->status == 'Separado' && $generator->currentReservation)
+            <!-- Card de Separación -->
+            <div class="bg-yellow-50 rounded-3xl border border-yellow-200 shadow-sm p-6 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-yellow-500/10 mb-4">
+                    <i class="fas fa-handshake text-8xl"></i>
+                </div>
+                <h3 class="text-xs font-black text-yellow-800 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                    <i class="fas fa-lock text-yellow-600"></i> Separación Activa
+                </h3>
+                
+                <div class="space-y-3 relative z-10">
+                    <div>
+                        <p class="text-[10px] text-yellow-700/70 font-bold uppercase tracking-widest mb-1">Cliente/Vendedor</p>
+                        <p class="text-sm font-black text-yellow-900">{{ $generator->currentReservation->client_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-yellow-700/70 font-bold uppercase tracking-widest mb-1">Teléfono</p>
+                        <p class="text-sm font-bold text-yellow-800">{{ $generator->currentReservation->client_phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-yellow-700/70 font-bold uppercase tracking-widest mb-1">Realizada el</p>
+                        <p class="text-sm font-bold text-yellow-800">{{ $generator->currentReservation->created_at->format('d/m/Y - h:i A') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-yellow-700/70 font-bold uppercase tracking-widest mb-1">Expira el</p>
+                        <p class="text-sm font-bold text-yellow-800">{{ $generator->currentReservation->expires_at->format('d/m/Y - h:i A') }}</p>
+                    </div>
+                </div>
+
+                @if(Auth::user()->role === 'admin')
+                <div class="mt-6 pt-4 border-t border-yellow-200/60 relative z-10">
+                    <form action="{{ route('inventory.generators.release', $generator) }}" method="POST" onsubmit="return confirm('¿Está seguro de forzar la liberación de este equipo?');">
+                        @csrf
+                        <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-black uppercase text-[10px] py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 tracking-widest">
+                            <i class="fas fa-unlock"></i> Liberar Equipo
+                        </button>
+                    </form>
+                </div>
+                @endif
+            </div>
+            @endif
+
             <!-- Card de Taller y Refacciones -->
             @if($generator->workshopLogs->count() > 0)
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">

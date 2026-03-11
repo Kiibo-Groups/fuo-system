@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Generator extends Model
 {
-    protected $fillable = ['model', 'serial_number', 'internal_folio', 'cost', 'sale_price', 'status', 'current_branch_id'];
+    protected $fillable = ['model', 'serial_number', 'internal_folio', 'cost', 'sale_price', 'status', 'current_branch_id', 'image'];
     public function branch() { return $this->belongsTo(Branch::class, 'current_branch_id'); }
     public function revisions() { return $this->hasMany(GeneratorRevision::class); }
     public function workshopLogs() { return $this->hasMany(WorkshopLog::class); }

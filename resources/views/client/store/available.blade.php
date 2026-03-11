@@ -98,8 +98,12 @@
         @forelse($generators as $generator)
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden hover:shadow-lg transition-all group flex flex-col">
                 <div class="aspect-video bg-slate-100 dark:bg-slate-900 flex items-center justify-center relative overflow-hidden">
-                    <!-- Placeholder de imagen -->
-                    <svg class="w-16 h-16 text-slate-300 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    @if($generator->image)
+                        <img src="{{ Storage::url($generator->image) }}" alt="{{ $generator->model }}" class="w-full h-full object-cover">
+                    @else
+                        <!-- Placeholder de imagen -->
+                        <svg class="w-16 h-16 text-slate-300 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    @endif
                     
                     <div class="absolute top-3 right-3">
                         <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-500 text-white shadow-md">
@@ -113,7 +117,7 @@
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">{{ $generator->model }}</h3>
                     <div class="mt-auto pt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
                         <div class="font-bold text-xl text-slate-900 dark:text-white">
-                            ${{ number_format($generator->cost, 2) }}
+                            ${{ number_format($generator->sale_price ?? 0, 2) }}
                         </div>
                         <button type="button" onclick="openReserveModal({{ $generator->id }}, '{{ $generator->model }}')" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg p-2 font-medium transition-colors" title="Separar Equipo">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

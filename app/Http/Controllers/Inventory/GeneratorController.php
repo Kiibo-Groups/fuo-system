@@ -125,9 +125,35 @@ class GeneratorController extends Controller
 
     public function show(Generator $generator)
     {
-        $generator->load(['branch', 'revisions.technician', 'workshopLogs.sparePartsLog.sparePart', 'statusHistory.user']);
+        $generator->load(['branch', 'revisions.technician', 'workshopLogs.sparePartsLog.sparePart', 'statusHistory.user', 'currentReservation']);
         $branches = Branch::all();
         return view('admin.inventory.generators.show', compact('generator', 'branches'));
+    }
+
+    public function releaseReservation(Generator $generator)
+    {
+        if ($generator->status !== 'Separado') {
+            return back()->withErrors(['El equipo no está separado.']);
+        }
+
+        $reservation = $generator->currentReservation;
+        
+        if ($reservation) {
+            $reservation->update(['is_active' => false]);
+        }
+
+        $generator->update(['status' => 'Disponible']);
+
+        // Registrar Historial
+        \App\Models\GeneratorStatusHistory::create([
+            'generator_id' => $generator->id,
+            'user_id' => Auth::id(),
+            'previous_status' => 'Separado',
+            'new_status' => 'Disponible',
+            'comment' => 'Separación liberada por ' . Auth::user()->name . ' (SuperAdmin).'
+        ]);
+
+        return back()->with('success', 'El equipo ha sido liberado exitosamente.');
     }
 
     public function store(Request $request)

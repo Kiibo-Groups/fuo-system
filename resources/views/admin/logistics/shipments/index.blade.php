@@ -145,10 +145,12 @@
 
             <div>
                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Evidencia Fotográfica</label>
-                <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-orange-300 transition-colors cursor-pointer relative">
-                    <input type="file" name="photo_evidence" required class="absolute inset-0 opacity-0 cursor-pointer">
-                    <i class="fas fa-camera text-slate-300 text-2xl mb-2"></i>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Click para subir foto del equipo empacado</p>
+                <div id="upload-container" class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-orange-300 transition-colors cursor-pointer relative transition-all">
+                    <input type="file" name="evidences[]" multiple required accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="updateImageStatus(this)">
+                    <div id="upload-content" class="flex flex-col items-center justify-center pointer-events-none">
+                        <i id="upload-icon" class="fas fa-camera text-slate-300 text-2xl mb-2 transition-colors"></i>
+                        <p id="upload-text" class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter transition-colors">Click para subir foto(s) del equipo</p>
+                    </div>
                 </div>
             </div>
 
@@ -169,6 +171,28 @@
     
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
+    }
+
+    function updateImageStatus(input) {
+        let textElement = document.getElementById('upload-text');
+        let iconElement = document.getElementById('upload-icon');
+        let container = document.getElementById('upload-container');
+        
+        if (input.files && input.files.length > 0) {
+            textElement.innerText = `${input.files.length} archivo(s) seleccionado(s)`;
+            textElement.classList.replace('text-slate-400', 'text-orange-500');
+            iconElement.classList.replace('text-slate-300', 'text-orange-500');
+            iconElement.classList.replace('fa-camera', 'fa-check-circle');
+            container.classList.replace('border-slate-200', 'border-orange-400');
+            container.classList.add('bg-orange-50');
+        } else {
+            textElement.innerText = 'Click para subir foto(s) del equipo';
+            textElement.classList.replace('text-orange-500', 'text-slate-400');
+            iconElement.classList.replace('text-orange-500', 'text-slate-300');
+            iconElement.classList.replace('fa-check-circle', 'fa-camera');
+            container.classList.replace('border-orange-400', 'border-slate-200');
+            container.classList.remove('bg-orange-50');
+        }
     }
 </script>
 @endsection

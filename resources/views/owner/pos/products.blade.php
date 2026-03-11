@@ -39,7 +39,7 @@
                         <th class="px-6 py-4">Modelo del Generador</th>
                         <th class="px-6 py-4 text-center">Stock</th>
                         <th class="px-6 py-4 text-right">Costo USD</th>
-                        <th class="px-6 py-4 w-64 text-right">Precio de Venta</th>
+                        <th class="px-6 py-4 text-right">Imagen y Precio de Venta</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50 text-sm">
@@ -61,15 +61,31 @@
                             ${{ number_format($generator->cost, 2) }}
                         </td>
                         <td class="px-6 py-4">
-                            <form action="{{ route('owner.pos.update_price', $generator) }}" method="POST" class="flex items-center justify-end gap-2">
+                            <form action="{{ route('owner.pos.update_price', $generator) }}" method="POST" enctype="multipart/form-data" class="flex items-center justify-end gap-4">
                                 @csrf
                                 @method('PUT')
-                                <div class="relative w-32">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                
+                                <div class="flex items-center gap-3">
+                                    @if($generator->image)
+                                        <img src="{{ Storage::url($generator->image) }}" alt="Img" class="w-10 h-10 object-cover rounded-xl border border-slate-200 shadow-sm">
+                                    @else
+                                        <div class="w-10 h-10 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    @endif
+                                    <label class="cursor-pointer bg-white hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition-colors border border-slate-200 shadow-sm">
+                                        <i class="fas fa-upload mr-1"></i> Subir
+                                        <input type="file" name="image" class="hidden" accept="image/*" onchange="this.form.querySelector('.upload-indicator').classList.remove('hidden')">
+                                    </label>
+                                    <span class="upload-indicator hidden text-orange-500 font-bold text-xs"><i class="fas fa-asterisk"></i> Archivo listo</span>
+                                </div>
+
+                                <div class="relative w-32 border-l border-slate-100 pl-4">
+                                    <span class="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                                     <input type="number" step="0.01" name="sale_price" value="{{ old('sale_price', $generator->sale_price) }}" required 
                                         class="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 font-bold text-slate-900 outline-none text-right shadow-sm">
                                 </div>
-                                <button type="submit" class="bg-orange-500 text-white p-2 rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-sm" title="Guardar Precio">
+                                <button type="submit" class="bg-orange-500 text-white p-2.5 rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-sm" title="Guardar Cambios">
                                     <i class="fas fa-save text-sm"></i>
                                 </button>
                             </form>

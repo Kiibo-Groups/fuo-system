@@ -60,8 +60,15 @@
                                 <div class="text-xs text-slate-500 mt-1">Guía: <span class="font-mono text-slate-900 dark:text-slate-400 font-medium">{{ $shipment->tracking_number }}</span></div>
                                 <div class="text-xs text-slate-400 mt-1">Enviado: {{ $shipment->created_at->format('d/m/Y H:i') }}</div>
                             </td>
-                            <td class="px-6 py-4">
-                                @if($shipment->photo_evidence_path)
+                            <td class="px-6 py-4 flex flex-col gap-2">
+                                @if($shipment->evidences && count($shipment->evidences) > 0)
+                                    @foreach($shipment->evidences as $index => $evidence)
+                                        <a href="{{ Storage::url($evidence) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                            Ver Foto {{ count($shipment->evidences) > 1 ? ($index + 1) : '' }}
+                                        </a>
+                                    @endforeach
+                                @elseif($shipment->photo_evidence_path)
                                     <a href="{{ Storage::url($shipment->photo_evidence_path) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
                                         Ver Foto

@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use App\Models\GeneratorStatusHistory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PosController extends Controller
 {
@@ -43,14 +44,25 @@ class PosController extends Controller
     public function updatePrice(Request $request, Generator $generator)
     {
         $request->validate([
-            'sale_price' => 'required|numeric|min:0'
+            'sale_price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
-        $generator->update([
+        $data = [
             'sale_price' => $request->sale_price
-        ]);
+        ];
 
-        return back()->with('success', 'Precio de venta actualizado exitosamente.');
+        if ($request->hasFile('image')) {
+            if ($generator->image) {
+                Storage::disk('public')->delete($generator->image);
+            }
+            $path = $request->file('image')->store('generators', 'public');
+            $data['image'] = $path;
+        }
+
+        $generator->update($data);
+
+        return back()->with('success', 'Datos de venta actualizados exitosamente.');
     }
 
     /**

@@ -54,17 +54,20 @@ class ShipmentController extends Controller
             'generator_id' => 'required|exists:generators,id',
             'shipping_company' => 'required|string',
             'tracking_number' => 'required|string',
-            'photo_evidence' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'evidences' => 'required|array|min:1',
+            'evidences.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         DB::transaction(function () use ($request) {
             $generator = Generator::findOrFail($request->generator_id);
             $oldStatus = $generator->status;
 
-            // 1. Guardar la imagen de evidencia
-            $path = null;
-            if ($request->hasFile('photo_evidence')) {
-                $path = $request->file('photo_evidence')->store('shipments/evidence', 'public');
+            // 1. Guardar las imagenes de evidencia
+            $paths = [];
+            if ($request->hasFile('evidences')) {
+                foreach ($request->file('evidences') as $file) {
+                    $paths[] = $file->store('shipments/evidence', 'public');
+                }
             }
 
             // 2. Crear el registro del envío
@@ -72,7 +75,8 @@ class ShipmentController extends Controller
                 'generator_id' => $generator->id,
                 'shipping_company' => $request->shipping_company,
                 'tracking_number' => $request->tracking_number,
-                'photo_evidence_path' => $path,
+                'photo_evidence_path' => count($paths) > 0 ? $paths[0] : null,
+                'evidences' => $paths,
             ]);
 
             // 3. Actualizar el estado del Generador
