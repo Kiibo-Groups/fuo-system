@@ -137,4 +137,32 @@ class PosController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Lista de ventas del POS para la sucursal del dueño actual.
+     */
+    public function sales()
+    {
+        $userBranchId = Auth::user()->branch_id;
+        $sales = Sale::where('branch_id', $userBranchId)
+                     ->with(['items.sellable', 'user'])
+                     ->latest()
+                     ->paginate(15);
+
+        return view('owner.pos.sales', compact('sales'));
+    }
+
+    /**
+     * Muestra el ticket en un formato amigable para impresora térmica u otra.
+     */
+    public function printTicket(Sale $sale)
+    {
+        if ($sale->branch_id !== Auth::user()->branch_id && Auth::user()->role !== 'admin') {
+            abort(403, 'No autorizado.');
+        }
+
+        $sale->load(['items.sellable', 'user', 'branch']);
+
+        return view('owner.pos.ticket', compact('sale'));
+    }
 }

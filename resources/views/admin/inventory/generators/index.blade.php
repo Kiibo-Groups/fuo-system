@@ -160,7 +160,7 @@
                                 <button onclick="openEditModal({{ $generator }})" class="p-2 text-slate-400 hover:text-blue-600 bg-white border border-slate-100 rounded-lg shadow-sm" title="Editar">
                                     <i class="fas fa-edit text-xs"></i>
                                 </button>
-                                <form action="{{ route('inventory.generators.destroy', $generator) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este generador?')">
+                                <form action="{{ route('inventory.generators.destroy', $generator) }}" method="POST" onsubmit="return confirm('¿De verdad estas seguro de eliminar?\n\n¡ADVERTENCIA!\nEsta acción también eliminará por completo todos los historiales, revisiones del taller, refacciones usadas, y cualquier registro ligado a este elemento.\n\n¡Esta acción es permanente y NO se puede deshacer!')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-2 text-slate-400 hover:text-red-600 bg-white border border-slate-100 rounded-lg shadow-sm" title="Eliminar">
@@ -445,7 +445,7 @@
         const selected = document.querySelectorAll('.generator-checkbox:checked');
         if (selected.length === 0) return;
 
-        if(!confirm(`¿Estás seguro de que deseas eliminar ${selected.length} unidades seleccionadas? Esta acción no se puede deshacer.`)) return;
+        if(!confirm(`¿De verdad estas seguro de eliminar ${selected.length} unidades seleccionadas?\n\n¡ADVERTENCIA!\nEsta acción también eliminará por completo todos los historiales, revisiones, pedidos y registros que estén ligados a estos elementos.\n\n¡Esta acción es permanente y NO se puede deshacer!`)) return;
         
         const ids = Array.from(selected).map(cb => cb.value);
         batchDeleteIdsInput.value = ids.join(',');

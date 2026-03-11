@@ -149,6 +149,8 @@ Route::middleware(['auth'])->group(function () {
         
         Route::get('/', [PosController::class, 'index'])->name('index');
         Route::post('/store', [PosController::class, 'store'])->name('store');
+        Route::get('/sales', [PosController::class, 'sales'])->name('sales');
+        Route::get('/sales/{sale}/ticket', [PosController::class, 'printTicket'])->name('print_ticket');
     });
 
 });

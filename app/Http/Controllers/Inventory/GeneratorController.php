@@ -177,7 +177,10 @@ class GeneratorController extends Controller
         $ids = explode(',', $validated['generator_ids']);
         $count = count($ids);
 
-        Generator::whereIn('id', $ids)->delete();
+        $generators = Generator::whereIn('id', $ids)->get();
+        foreach ($generators as $generator) {
+            $generator->delete();
+        }
 
         return redirect()->route('inventory.generators.index')->with('success', $count . ' generadores eliminados correctamente.');
     }

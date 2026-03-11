@@ -287,6 +287,14 @@
                 cart = [];
                 closeCheckoutModal();
                 alert('¡Venta realizada exitosamente!');
+                
+                // Abrir ticket de impresión y al cerrar recargar (o si prefieren, dejar que el empleado lo cierre)
+                const printWindow = window.open(`/pos/sales/${data.sale_id}/ticket`, '_blank', 'width=400,height=600');
+                if(!printWindow) {
+                    alert('Por favor permita las ventanas emergentes para generar el ticket.');
+                }
+                
+                // Recargar el inventario
                 window.location.reload();
             } else {
                 alert(data.message || 'Ocurrió un error al procesar la venta.');
