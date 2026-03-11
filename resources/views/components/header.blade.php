@@ -6,19 +6,22 @@
         <h2 class="text-base sm:text-lg font-bold text-slate-800 truncate">Panel de Control</h2>
     </div>
     <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-        <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+        <!-- <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
             <i class="fas fa-bell"></i>
             <span class="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full border-2 border-white"></span>
-        </button>
-        <div class="hidden sm:block h-8 w-px bg-slate-200 mx-2"></div>
-        <form method="POST" action="{{ route('logout') }}" class="m-0">
-            @csrf
-            <button type="submit"
-                class="text-sm font-bold text-slate-700 flex items-center gap-2 bg-slate-50 hover:bg-slate-100 hover:text-red-500 px-2 sm:px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
-                <i class="fas fa-sign-out-alt text-slate-400"></i>
-                <span class="hidden sm:inline">Cerrar Sesión</span>
-            </button>
-        </form>
+        </button> 
+         <div class="hidden sm:block h-8 w-px bg-slate-200 mx-2"></div>-->     
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-slate-900 font-bold">
+                {{ Auth::user()->name[0] }}
+            </div>
+            <div class="overflow-hidden">
+                <p class="text-sm font-bold text-slate-900 truncate">{{ Auth::user()->name }}</p>
+                <p class="text-xs text-slate-500 truncate">{{ Auth::user()->email }}</p>
+            </div>
+        </div>
+
+        
     </div>
 </header>
 

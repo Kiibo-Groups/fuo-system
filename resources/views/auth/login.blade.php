@@ -38,8 +38,7 @@
         <div>
             <div class="flex justify-between mb-1">
                 <label class="text-sm font-semibold text-slate-700">Contraseña</label>
-                <a href="#" class="text-xs font-bold text-orange-600 hover:text-orange-700">¿Olvidaste tu
-                    contraseña?</a>
+                
             </div>
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
@@ -65,14 +64,14 @@
         </button>
     </form>
 
-    <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+    <!-- <div class="mt-8 pt-6 border-t border-slate-100 text-center">
         <p class="text-sm text-slate-600">
             ¿No tienes acceso?
             <a href="{{ url('/register') }}" class="font-bold text-orange-600 hover:underline">Solicita una
                 cuenta
             </a>
         </p>
-    </div>
+    </div> -->
 </div>
 
 @endsection

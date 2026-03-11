@@ -119,7 +119,7 @@
         @endif
     </nav>
     <div class="p-4 border-t border-slate-800">
-        <div class="bg-slate-800/50 p-4 rounded-2xl flex items-center gap-3">
+        <!-- <div class="bg-slate-800/50 p-4 rounded-2xl flex items-center gap-3">
             <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-slate-900 font-bold">
                 {{ Auth::user()->name[0] }}
             </div>
@@ -127,6 +127,16 @@
                 <p class="text-sm font-bold text-white truncate">{{ Auth::user()->name }}</p>
                 <p class="text-xs text-slate-500 truncate">{{ Auth::user()->email }}</p>
             </div>
+        </div> -->
+        <div class="p-2 flex items-center gap-3">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                    class="text-sm font-bold text-slate-700 flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800/50 hover:text-white px-2 sm:px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fas fa-sign-out-alt text-slate-400"></i>
+                    <span class="hidden sm:inline">Cerrar Sesión</span>
+                </button>
+            </form>
         </div>
     </div>
 </aside>
