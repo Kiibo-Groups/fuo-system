@@ -117,7 +117,7 @@ class GeneratorController extends Controller
             $query->where('status', $request->status);
         }
 
-        $generators = $query->orderBy('id', 'desc')->paginate(10);
+        $generators = $query->orderBy('id', 'desc')->paginate(100);
         $branches = Branch::all();
 
         return view('admin.inventory.generators.index', compact('generators', 'branches'));
@@ -421,7 +421,7 @@ class GeneratorController extends Controller
             });
         }
 
-        $generators = $query->latest()->paginate(12);
+        $generators = $query->latest()->paginate(50);
 
         $activeBanners = \App\Models\Banner::where('is_active', true)
             ->whereIn('target_audience', ['client', 'both'])
