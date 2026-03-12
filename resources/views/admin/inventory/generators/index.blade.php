@@ -100,9 +100,21 @@
                         @endif
                         <th class="px-6 py-4">Folio / Serie</th>
                         <th class="px-6 py-4">Modelo del Generador</th>
+                        @if(Auth::user()->role === 'admin' )
+                        <th class="px-6 py-4">Sucursal Asignada</th>
+                        @elseif(Auth::user()->role === 'owner')
                         <th class="px-6 py-4">Ubicación Actual</th>
+                        @endif
                         <th class="px-6 py-4">Estado</th>
                         <th class="px-6 py-4">Último Mov.</th>
+                        @if(Auth::user()->role === 'admin')
+                        <th class="px-6 py-4 text-center">
+                            <button onclick="openReceiveAllModal()" title="Marcar todos los 'En Tránsito' como Recibido en Almacén"
+                                class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg shadow transition-all whitespace-nowrap">
+                                <i class="fas fa-warehouse"></i> Recibir Tránsito
+                            </button>
+                        </th>
+                        @endif
                         <th class="px-6 py-4 text-right">Acciones</th>
                     </tr>
                 </thead>
@@ -120,12 +132,41 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-700 uppercase text-xs">{{ $generator->model }}</div>
+                            @if(Auth::user()->role === 'owner')
+                                @if($generator->owner_price)
+                                <div class="text-[10px] text-slate-700 font-bold tracking-tight">$ {{ number_format($generator->owner_price, 2) }} MXN</div>
+                                @endif
+                            @else
                             <div class="text-[10px] text-orange-600 font-bold tracking-tight">$ {{ number_format($generator->cost, 2) }} MXN</div>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                                <span class="text-xs font-bold text-slate-600 uppercase">{{ $generator->branch->name ?? 'En tránsito' }}</span>
+                            <div class="space-y-1">
+                                @if(Auth::user()->role === 'admin' )
+                                {{-- Sucursal asignada (destino/dueña) --}}
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full {{ $generator->assigned_branch_id ? 'bg-emerald-400' : 'bg-slate-200' }}"></div>
+                                    <span class="text-xs font-bold text-slate-800 uppercase">
+                                        {{ $generator->assignedBranch->name ?? 'Sin asignar' }}
+                                    </span>
+                                </div>
+                                {{-- Ubicación operativa actual --}}
+                                @if($generator->branch)
+                                <div class="flex items-center gap-1 ml-4">
+                                    <i class="fas fa-map-pin text-[8px] text-slate-300"></i>
+                                    <span class="text-[10px] text-slate-400 font-medium">{{ $generator->branch->name }}</span>
+                                </div>
+                                @endif
+
+                                @elseif(Auth::user()->role === 'owner' )
+                                    {{-- Ubicación operativa actual --}}
+                                    @if($generator->branch)
+                                    <div class="flex items-center gap-1 ml-4">
+                                        <i class="fas fa-map-pin text-[12px] text-emerald-400"></i>
+                                        <span class="text-[11px] text-slate-900 font-medium">{{ $generator->branch->name }}</span>
+                                    </div>
+                                    @endif
+                                @endif
                             </div>
                         </td>
                         <td class="px-6 py-4">
@@ -150,6 +191,26 @@
                         <td class="px-6 py-4 text-[10px] text-slate-500 font-medium">
                             {{ $generator->updated_at->diffForHumans() }}
                         </td>
+                        @if(Auth::user()->role === 'admin')
+                        <td class="px-6 py-4 text-center">
+                            @if($generator->status === 'Pedido en tránsito')
+                            <form action="{{ route('inventory.generators.batch-status') }}" method="POST" class="inline">
+                                @csrf
+                                <input type="hidden" name="generator_ids" value="{{ $generator->id }}">
+                                <input type="hidden" name="status" value="Recibido en almacén">
+                                <input type="hidden" name="comment" value="Recibido en almacén desde inventario">
+                                <button type="submit"
+                                    onclick="return confirm('¿Confirmas marcar esta unidad como Recibido en Almacén?')"
+                                    title="Marcar como Recibido en Almacén"
+                                    class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-lg shadow-sm transition-all">
+                                    <i class="fas fa-check-circle"></i> Recibir
+                                </button>
+                            </form>
+                            @else
+                            <span class="text-slate-200 text-[9px] font-bold uppercase">—</span>
+                            @endif
+                        </td>
+                        @endif
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-1">
                                 <a href="{{ route('inventory.generators.show', $generator) }}" class="p-2 text-slate-400 hover:text-slate-900 bg-white border border-slate-100 rounded-lg shadow-sm" title="Ver Detalle">
@@ -257,9 +318,26 @@
                         </select>
                     </div>
                     @if(Auth::user()->role !== 'owner')
+                    {{-- ===== SUCURSAL ASIGNADA (DESTINO / DUEÑA) ===== --}}
+                    <div class="md:col-span-2">
+                        <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                            <label class="block text-xs font-black text-emerald-700 uppercase tracking-widest mb-1">
+                                <i class="fas fa-building mr-1"></i> Sucursal Asignada (Destino)
+                            </label>
+                            <p class="text-[10px] text-emerald-600 mb-2">La sucursal que podrá ver y gestionar este generador en todo momento, sin importar su estado operativo.</p>
+                            <select name="assigned_branch_id" id="field-assigned_branch_id"
+                                class="w-full px-4 py-2.5 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700 appearance-none">
+                                <option value="">Sin asignar (Inventario General)</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    {{-- ===== UBICACIÓN OPERATIVA ACTUAL ===== --}}
                     <div>
-                        <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Sucursal Actual</label>
-                        <select name="current_branch_id" id="field-current_branch_id" 
+                        <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Ubicación Actual <span class="text-slate-300 normal-case font-normal">(opcional)</span></label>
+                        <select name="current_branch_id" id="field-current_branch_id"
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700 appearance-none">
                             <option value="">Ninguna / En tránsito</option>
                             @foreach($branches as $branch)
@@ -329,6 +407,72 @@
     <input type="hidden" name="generator_ids" id="batch-delete-ids">
 </form>
 
+<!-- Modal: Recibir TODOS los En Tránsito -->
+@if(Auth::user()->role === 'admin')
+@php
+    $transitIds = $generators->filter(fn($g) => $g->status === 'Pedido en tránsito')->pluck('id')->join(',');
+    $transitCount = $generators->filter(fn($g) => $g->status === 'Pedido en tránsito')->count();
+@endphp
+<div id="modal-receive-all" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 backdrop-blur-sm p-4" onclick="if(event.target===this) closeModal('modal-receive-all')">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-warehouse text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Recibir en Almacén</h3>
+                        <p class="text-slate-500 text-xs">Cambio masivo de estado</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-receive-all')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            @if($transitCount > 0)
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl font-black text-blue-600">{{ $transitCount }}</div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">unidades "Pedido en tránsito"</p>
+                        <p class="text-xs text-slate-500">serán marcadas como <span class="font-bold text-slate-700">Recibido en Almacén</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <form action="{{ route('inventory.generators.batch-status') }}" method="POST">
+                @csrf
+                <input type="hidden" name="generator_ids" value="{{ $transitIds }}">
+                <input type="hidden" name="status" value="Recibido en almacén">
+                <div class="mb-5">
+                    <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Comentario (Opcional)</label>
+                    <input type="text" name="comment" value="Recepción masiva en almacén"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700 text-sm"
+                        placeholder="Ej. Llegada de contenedor...">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('modal-receive-all')" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all uppercase">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                        <i class="fas fa-warehouse"></i> Confirmar Recepción
+                    </button>
+                </div>
+            </form>
+            @else
+            <div class="py-8 text-center">
+                <i class="fas fa-check-circle text-4xl text-emerald-300 mb-4"></i>
+                <p class="text-slate-500 font-bold uppercase tracking-widest text-xs">No hay unidades en tránsito en esta página</p>
+            </div>
+            <div class="flex">
+                <button type="button" onclick="closeModal('modal-receive-all')" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all uppercase">Cerrar</button>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Modal para Actualización por Lote -->
 <div id="modal-batch" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 backdrop-blur-sm p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -363,11 +507,30 @@
                 </div>
 
                 @if(Auth::user()->role !== 'owner')
+                {{-- ===== SUCURSAL ASIGNADA (DESTINO/DUEÑA) ===== --}}
+                <div class="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                    <label class="block text-xs font-black text-emerald-700 uppercase tracking-widest mb-1">
+                        <i class="fas fa-building mr-1"></i> Sucursal Asignada / Destino (Opcional)
+                    </label>
+                    <p class="text-[10px] text-emerald-600 mb-2">La sucursal que podrá ver y rastrear estos generadores sin importar su estado operativo.</p>
+                    <select name="assigned_branch_id" class="w-full px-3 py-2.5 bg-white border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700 appearance-none text-sm">
+                        <option value="">-- No cambiar sucursal asignada --</option>
+                        <option value="none">[Sin asignar / Inventario General]</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- ===== UBICACIÓN OPERATIVA ACTUAL ===== --}}
                 <div class="mb-4">
-                    <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Asignar Sucursal / Cliente (Opcional)</label>
+                    <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">
+                        <i class="fas fa-map-pin mr-1"></i> Ubicación Física Actual (Opcional)
+                    </label>
+                    <p class="text-[10px] text-slate-400 mb-2">Dónde están físicamente estos generadores ahora (almacén, taller, sucursal, etc.).</p>
                     <select name="current_branch_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700 appearance-none">
-                        <option value="">-- No cambiar sucursal --</option>
-                        <option value="none">[Desasignar / En Tránsito]</option>
+                        <option value="">-- No cambiar ubicación --</option>
+                        <option value="none">[Sin ubicación / En Tránsito]</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
@@ -477,6 +640,7 @@
     const inputCost = document.getElementById('field-cost');
     const inputStatus = document.getElementById('field-status');
     const inputBranch = document.getElementById('field-current_branch_id');
+    const inputAssignedBranch = document.getElementById('field-assigned_branch_id');
 
     function openCreateModal() {
         form.action = "{{ route('inventory.generators.store') }}";
@@ -484,16 +648,15 @@
         title.innerText = "Nuevo Generador";
         desc.innerText = "Registra una nueva unidad en el inventario global.";
         btnText.innerText = "Guardar Unidad";
-        
+
         inputModel.value = '';
         inputSerial.value = '';
         inputFolio.value = '';
         inputCost.value = '';
         inputStatus.value = 'Pedido en tránsito';
-        if (inputBranch) {
-            inputBranch.value = '';
-        }
-        
+        if (inputBranch) inputBranch.value = '';
+        if (inputAssignedBranch) inputAssignedBranch.value = '';
+
         modal.classList.remove('hidden');
     }
 
@@ -503,17 +666,20 @@
         title.innerText = "Editar Generador";
         desc.innerText = "Actualiza la información técnica de la unidad.";
         btnText.innerText = "Actualizar Cambios";
-        
+
         inputModel.value = generator.model;
         inputSerial.value = generator.serial_number;
         inputFolio.value = generator.internal_folio;
         inputCost.value = generator.cost;
         inputStatus.value = generator.status;
-        if (inputBranch) {
-            inputBranch.value = generator.current_branch_id || '';
-        }
-        
+        if (inputBranch) inputBranch.value = generator.current_branch_id || '';
+        if (inputAssignedBranch) inputAssignedBranch.value = generator.assigned_branch_id || '';
+
         modal.classList.remove('hidden');
+    }
+
+    function openReceiveAllModal() {
+        document.getElementById('modal-receive-all').classList.remove('hidden');
     }
 
     function closeModal(id) {

@@ -25,19 +25,20 @@ class DashboardController extends Controller
         $query = \App\Models\Generator::query();
         
         if ($user->role === 'owner') {
-            // Owner metrics specific to their branch
-            $assignedCount = \App\Models\Generator::where('current_branch_id', $user->branch_id)->count();
+            // Owner: ve todos los generadores ASIGNADOS a su sucursal,
+            // sin importar el estado operativo actual
+            $assignedCount = \App\Models\Generator::where('assigned_branch_id', $user->branch_id)->count();
 
-            $inTransitCount = \App\Models\Generator::where('status', 'Enviado')
-                ->where('current_branch_id', $user->branch_id)->count();
-            
+            $inTransitCount = \App\Models\Generator::whereIn('status', ['Pedido en tránsito', 'Recibido en almacén', 'En revisión', 'En taller', 'Lista para envío', 'Enviado'])
+                ->where('assigned_branch_id', $user->branch_id)->count();
+
             $inWorkshopCount = \App\Models\Generator::whereIn('status', ['En revisión', 'En taller'])
-                ->where('current_branch_id', $user->branch_id)->count();
-                
+                ->where('assigned_branch_id', $user->branch_id)->count();
+
             $availableCount = \App\Models\Generator::where('status', 'Disponible')
-                ->where('current_branch_id', $user->branch_id)->count();
-                
-            $query->where('current_branch_id', $user->branch_id);
+                ->where('assigned_branch_id', $user->branch_id)->count();
+
+            $query->where('assigned_branch_id', $user->branch_id);
         } else {
             // Admin metrics overall
             $inTransitCount = \App\Models\Generator::whereIn('status', ['Pedido en tránsito', 'Enviado'])->count();
@@ -56,11 +57,12 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Recent inventory
-        $recentGenerators = $query->with(['branch', 'workshopLogs'])
+        // Recent inventory — carga también assignedBranch para mostrarlo en la tabla
+        $recentGenerators = $query->with(['branch', 'assignedBranch', 'workshopLogs'])
             ->orderBy('id', 'desc')
             ->take(5)
             ->get();
+
 
         return view('admin.dashboard', compact(
             'assignedCount',

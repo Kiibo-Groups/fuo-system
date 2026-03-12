@@ -15,13 +15,15 @@ class GeneratorController extends Controller
     public function updateStatus(Request $request, Generator $generator)
     {
         $request->validate([
-            'status' => 'required|string',
-            'comment' => 'nullable|string|max:500',
-            'current_branch_id' => 'nullable|string'
+            'status'             => 'required|string',
+            'comment'            => 'nullable|string|max:500',
+            'current_branch_id'  => 'nullable|string',
+            'assigned_branch_id' => 'nullable|string',
         ]);
 
         $oldStatus = $generator->status;
 
+        // Ubicación operativa actual — puede cambiar con cada movimiento
         $newBranchId = $request->current_branch_id;
         if ($newBranchId === 'none') {
             $newBranchId = null;
@@ -29,33 +31,51 @@ class GeneratorController extends Controller
             $newBranchId = $generator->current_branch_id;
         }
 
-        $generator->update([
-            'status' => $request->status,
-            'current_branch_id' => $newBranchId
-        ]);
+        $updateData = [
+            'status'            => $request->status,
+            'current_branch_id' => $newBranchId,
+        ];
+
+        // Solo actualizamos assigned_branch_id si se envió explícitamente
+        if ($request->has('assigned_branch_id')) {
+            $assignedBranchId = $request->assigned_branch_id;
+            $updateData['assigned_branch_id'] = ($assignedBranchId === 'none' || empty($assignedBranchId))
+                ? null
+                : $assignedBranchId;
+        }
+
+        $generator->update($updateData);
+
+        // Si cambió la sucursal asignada, recalculamos el precio con comisión
+        if (isset($updateData['assigned_branch_id'])) {
+            $generator->load('assignedBranch');
+            $generator->recalculateOwnerPrice();
+        }
 
         GeneratorStatusHistory::create([
-            'generator_id' => $generator->id,
-            'user_id' => Auth::id(),
+            'generator_id'    => $generator->id,
+            'user_id'         => Auth::id(),
             'previous_status' => $oldStatus,
-            'new_status' => $request->status,
-            'comment' => $request->comment
+            'new_status'      => $request->status,
+            'comment'         => $request->comment,
         ]);
 
         return redirect()->back()->with('success', 'Estado actualizado correctamente.');
     }
 
+
     public function batchUpdateStatus(Request $request)
     {
         $validated = $request->validate([
-            'generator_ids' => 'required|string',
-            'status' => 'nullable|string',
-            'current_branch_id' => 'nullable|string',
-            'comment' => 'nullable|string|max:500'
+            'generator_ids'      => 'required|string',
+            'status'             => 'nullable|string',
+            'current_branch_id'  => 'nullable|string',
+            'assigned_branch_id' => 'nullable|string',
+            'comment'            => 'nullable|string|max:500',
         ]);
 
-        if (empty($validated['status']) && empty($validated['current_branch_id'])) {
-            return redirect()->back()->withErrors(['Debe seleccionar un estado o una sucursal para actualizar.']);
+        if (empty($validated['status']) && empty($validated['current_branch_id']) && empty($validated['assigned_branch_id'])) {
+            return redirect()->back()->withErrors(['Debe seleccionar un estado, ubicación o sucursal asignada para actualizar.']);
         }
 
         $ids = explode(',', $validated['generator_ids']);
@@ -63,26 +83,38 @@ class GeneratorController extends Controller
 
         foreach ($generators as $generator) {
             $oldStatus = $generator->status;
-
             $updateData = [];
+
             if (!empty($validated['status'])) {
                 $updateData['status'] = $validated['status'];
             }
-            if (!empty($validated['current_branch_id'])) {
+            // Ubicación operativa actual
+            if (array_key_exists('current_branch_id', $validated) && !empty($validated['current_branch_id'])) {
                 $updateData['current_branch_id'] = $validated['current_branch_id'] === 'none' ? null : $validated['current_branch_id'];
+            }
+            // Sucursal asignada/destino (solo si se envió explícitamente)
+            if (array_key_exists('assigned_branch_id', $validated) && !empty($validated['assigned_branch_id'])) {
+                $updateData['assigned_branch_id'] = $validated['assigned_branch_id'] === 'none' ? null : $validated['assigned_branch_id'];
             }
 
             if (!empty($updateData)) {
                 $generator->update($updateData);
+
+                // Recalcular owner_price si cambió la sucursal asignada
+                // o si ya tenía sucursal asignada (el cost puede haber cambiado por otro flujo)
+                if (isset($updateData['assigned_branch_id']) || $generator->assigned_branch_id) {
+                    $generator->load('assignedBranch');
+                    $generator->recalculateOwnerPrice();
+                }
             }
 
             if (!empty($validated['status']) && $oldStatus !== $validated['status']) {
                 GeneratorStatusHistory::create([
-                    'generator_id' => $generator->id,
-                    'user_id' => Auth::id(),
+                    'generator_id'    => $generator->id,
+                    'user_id'         => Auth::id(),
                     'previous_status' => $oldStatus,
-                    'new_status' => $validated['status'],
-                    'comment' => $validated['comment'] ?? 'Actualización por lote'
+                    'new_status'      => $validated['status'],
+                    'comment'         => $validated['comment'] ?? 'Actualización por lote',
                 ]);
             }
         }
@@ -91,10 +123,12 @@ class GeneratorController extends Controller
     }
     public function index(Request $request)
     {
-        $query = Generator::with('branch');
+        $query = Generator::with(['branch', 'assignedBranch']);
 
+        // El owner solo ve los generadores ASIGNADOS a su sucursal
+        // (independientemente del estado operativo actual)
         if (Auth::user()->role === 'owner') {
-            $query->where('current_branch_id', Auth::user()->branch_id);
+            $query->where('assigned_branch_id', Auth::user()->branch_id);
         }
 
         // Filtro por búsqueda rápida (Modelo, Serie o Folio)
@@ -107,9 +141,9 @@ class GeneratorController extends Controller
             });
         }
 
-        // Filtro por Sucursal
+        // Filtro por Sucursal Asignada (destino)
         if ($request->filled('branch_id')) {
-            $query->where('current_branch_id', $request->branch_id);
+            $query->where('assigned_branch_id', $request->branch_id);
         }
 
         // Filtro por Estado
@@ -125,7 +159,7 @@ class GeneratorController extends Controller
 
     public function show(Generator $generator)
     {
-        $generator->load(['branch', 'revisions.technician', 'workshopLogs.sparePartsLog.sparePart', 'statusHistory.user', 'currentReservation']);
+        $generator->load(['branch', 'assignedBranch', 'revisions.technician', 'workshopLogs.sparePartsLog.sparePart', 'statusHistory.user', 'currentReservation']);
         $branches = Branch::all();
         return view('admin.inventory.generators.show', compact('generator', 'branches'));
     }
@@ -159,15 +193,22 @@ class GeneratorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'model' => 'required|string|max:255',
-            'serial_number' => 'required|string|unique:generators,serial_number',
-            'internal_folio' => 'required|string|unique:generators,internal_folio',
-            'cost' => 'required|numeric|min:0',
-            'status' => 'required|string',
-            'current_branch_id' => 'nullable|exists:branches,id',
+            'model'              => 'required|string|max:255',
+            'serial_number'      => 'required|string|unique:generators,serial_number',
+            'internal_folio'     => 'required|string|unique:generators,internal_folio',
+            'cost'               => 'required|numeric|min:0',
+            'status'             => 'required|string',
+            'current_branch_id'  => 'nullable|exists:branches,id',
+            'assigned_branch_id' => 'nullable|exists:branches,id',
         ]);
 
-        Generator::create($validated);
+        $generator = Generator::create($validated);
+
+        // Calcular y guardar el precio con comisión de la sucursal asignada
+        if ($generator->assigned_branch_id) {
+            $generator->load('assignedBranch');
+            $generator->recalculateOwnerPrice();
+        }
 
         return redirect()->route('inventory.generators.index')->with('success', 'Generador creado correctamente.');
     }
@@ -175,15 +216,23 @@ class GeneratorController extends Controller
     public function update(Request $request, Generator $generator)
     {
         $validated = $request->validate([
-            'model' => 'required|string|max:255',
-            'serial_number' => 'required|string|unique:generators,serial_number,' . $generator->id,
-            'internal_folio' => 'required|string|unique:generators,internal_folio,' . $generator->id,
-            'cost' => 'required|numeric|min:0',
-            'status' => 'required|string',
-            'current_branch_id' => 'nullable|exists:branches,id',
+            'model'              => 'required|string|max:255',
+            'serial_number'      => 'required|string|unique:generators,serial_number,' . $generator->id,
+            'internal_folio'     => 'required|string|unique:generators,internal_folio,' . $generator->id,
+            'cost'               => 'required|numeric|min:0',
+            'status'             => 'required|string',
+            'current_branch_id'  => 'nullable|exists:branches,id',
+            'assigned_branch_id' => 'nullable|exists:branches,id',
         ]);
 
+        $oldAssigned = $generator->assigned_branch_id;
         $generator->update($validated);
+
+        // Si cambió la sucursal asignada o el costo, recalculamos owner_price
+        if ($generator->assigned_branch_id !== $oldAssigned || isset($validated['cost'])) {
+            $generator->load('assignedBranch');
+            $generator->recalculateOwnerPrice();
+        }
 
         return redirect()->route('inventory.generators.index')->with('success', 'Generador actualizado correctamente.');
     }
@@ -256,10 +305,10 @@ class GeneratorController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $query = Generator::with('branch');
+        $query = Generator::with(['branch', 'assignedBranch']);
 
         if (Auth::user()->role === 'owner') {
-            $query->where('current_branch_id', Auth::user()->branch_id);
+            $query->where('assigned_branch_id', Auth::user()->branch_id);
         }
 
         // Aplicar los mismos filtros que en la tabla
@@ -273,7 +322,7 @@ class GeneratorController extends Controller
         }
 
         if ($request->filled('branch_id')) {
-            $query->where('current_branch_id', $request->branch_id);
+            $query->where('assigned_branch_id', $request->branch_id);
         }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -291,13 +340,13 @@ class GeneratorController extends Controller
             "Expires"             => "0"
         ];
 
-        $columns = ['ID', 'Folio Interno', 'No. Serie', 'Modelo', 'Costo (MXN)', 'Sucursal', 'Estado', 'Fecha Registro'];
+        $columns = ['ID', 'Folio Interno', 'No. Serie', 'Modelo', 'Costo (MXN)', 'Sucursal Asignada', 'Ubicación Actual', 'Estado', 'Fecha Registro'];
 
         $callback = function() use($generators, $columns) {
             $file = fopen('php://output', 'w');
             // Añadir el BOM para que Excel reconozca los acentos y UTF-8
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             fputcsv($file, $columns);
 
             foreach ($generators as $gen) {
@@ -307,9 +356,10 @@ class GeneratorController extends Controller
                     $gen->serial_number,
                     $gen->model,
                     $gen->cost,
-                    $gen->branch->name ?? 'En tránsito',
+                    $gen->assignedBranch->name ?? 'Sin asignar',
+                    $gen->branch->name ?? 'En tránsito / Almacén',
                     $gen->status,
-                    $gen->created_at->format('Y-m-d H:i')
+                    $gen->created_at->format('Y-m-d H:i'),
                 ]);
             }
 
@@ -382,14 +432,21 @@ class GeneratorController extends Controller
                 }
 
                 try {
-                    \App\Models\Generator::create([
-                        'internal_folio' => $folio,
-                        'serial_number'  => $serie,
-                        'model'          => $modelo,
-                        'cost'           => (float) $costo,
-                        'status'         => 'Pedido en tránsito',
-                        'current_branch_id' => null,
+                    $assignedBranchId = $request->input('assigned_branch_id') ?: null;
+                    $gen = \App\Models\Generator::create([
+                        'internal_folio'      => $folio,
+                        'serial_number'       => $serie,
+                        'model'               => $modelo,
+                        'cost'                => (float) $costo,
+                        'status'              => 'Pedido en tránsito',
+                        'current_branch_id'   => null,
+                        'assigned_branch_id'  => $assignedBranchId,
                     ]);
+                    // Calcular precio con comisión si hay sucursal asignada
+                    if ($assignedBranchId) {
+                        $gen->load('assignedBranch');
+                        $gen->recalculateOwnerPrice();
+                    }
                     $imported++;
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Import error on row {$rowNum}: " . $e->getMessage());
@@ -410,8 +467,11 @@ class GeneratorController extends Controller
     public function availableInBranch(Request $request)
     {
         $userBranchId = Auth::user()->branch_id;
-        
-        $query = Generator::where('current_branch_id', $userBranchId)->where('status', 'Disponible');
+
+        // El cliente ve los disponibles en su sucursal asignada
+        $query = Generator::where('assigned_branch_id', $userBranchId)
+        ->where('status', 'Disponible') // <- Que este disponible
+        ->where('sale_price','!=','0'); // <- Que tenga precio asignado
 
         if ($request->filled('search')) {
             $search = $request->search;

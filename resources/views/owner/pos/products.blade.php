@@ -58,7 +58,12 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right font-black text-slate-900">
-                            ${{ number_format($generator->cost, 2) }}
+                           
+                            @if($generator->owner_price)
+                            <span class="font-black text-slate-900 text-sm">${{ number_format($generator->owner_price, 2) }}</span>
+                            @else
+                            <span class="text-[10px] text-slate-400 italic">Sin precio</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             <form action="{{ route('owner.pos.update_price', $generator) }}" method="POST" enctype="multipart/form-data" class="flex items-center justify-end gap-4">

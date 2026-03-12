@@ -17,8 +17,9 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'location' => 'required|string|max:255',
+            'name'            => 'required|string|max:255',
+            'location'        => 'required|string|max:255',
+            'commission_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         Branch::create($validated);
@@ -29,8 +30,9 @@ class BranchController extends Controller
     public function update(Request $request, Branch $branch)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'location' => 'required|string|max:255',
+            'name'            => 'required|string|max:255',
+            'location'        => 'required|string|max:255',
+            'commission_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $branch->update($validated);

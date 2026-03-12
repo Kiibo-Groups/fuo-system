@@ -164,7 +164,11 @@
                         <th class="px-6 py-4">Folio / Modelo</th>
                         <th class="px-6 py-4">Sucursal</th>
                         <th class="px-6 py-4">Estado</th>
+                        @if(Auth::user()->role === 'owner')
+                        <th class="px-6 py-4">Precio Asignado</th>
+                        @else
                         <th class="px-6 py-4">Costo Refacciones</th>
+                        @endif
                         <th class="px-6 py-4">Acciones</th>
                     </tr>
                 </thead>
@@ -176,9 +180,17 @@
                                 <div class="text-xs text-slate-500">{{ $gen->model }} ({{"S/N: " . $gen->serial_number}})</div>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs font-medium">
-                                    <i class="fas fa-map-marker-alt text-[10px]"></i> {{ $gen->branch ? $gen->branch->name : 'N/A' }}
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs font-bold">
+                                        <i class="fas fa-building text-[10px]"></i>
+                                        {{ $gen->assignedBranch ? $gen->assignedBranch->name : 'Sin asignar' }}
+                                    </span>
+                                    @if($gen->branch && $gen->branch->id !== optional($gen->assignedBranch)->id)
+                                    <div class="text-[10px] text-slate-400 ml-1 flex items-center gap-1">
+                                        <i class="fas fa-map-pin text-[8px]"></i> {{ $gen->branch->name }}
+                                    </div>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 @php
@@ -199,11 +211,17 @@
                                     {{ $gen->status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-600">
-                                @php
-                                    $repairCost = $gen->workshopLogs->max('total_repair_cost') ?? 0;
-                                @endphp
-                                ${{ number_format($repairCost, 2) }}
+                            <td class="px-6 py-4">
+                                @if(Auth::user()->role === 'owner')
+                                    @if($gen->owner_price)
+                                    <span class="font-black text-slate-900 text-sm">${{ number_format($gen->owner_price, 2) }}</span>
+                                    @else
+                                    <span class="text-[10px] text-slate-400 italic">Sin precio</span>
+                                    @endif
+                                @else
+                                    @php $repairCost = $gen->workshopLogs->max('total_repair_cost') ?? 0; @endphp
+                                    <span class="font-mono text-slate-600">${{ number_format($repairCost, 2) }}</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4">
                                 <a href="{{ route('inventory.generators.show', $gen) }}" class="text-slate-400 hover:text-slate-900 transition-colors">

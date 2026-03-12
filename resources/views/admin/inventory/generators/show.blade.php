@@ -67,12 +67,43 @@
                         <p class="text-lg font-bold text-slate-900">{{ $generator->model }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Ubicación Actual</p>
-                        <p class="text-lg font-bold text-slate-900">{{ $generator->branch->name ?? 'En Tránsito / Almacén Central' }}</p>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Sucursal Asignada</p>
+                        <p class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            @if($generator->assignedBranch)
+                            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                            {{ $generator->assignedBranch->name }}
+                            @else
+                            <span class="text-slate-400 text-sm font-medium">Sin asignar</span>
+                            @endif
+                        </p>
+                        @if($generator->branch && $generator->branch->id !== optional($generator->assignedBranch)->id)
+                        <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                            <i class="fas fa-map-pin"></i> Ubicación actual: <span class="font-bold">{{ $generator->branch->name }}</span>
+                        </p>
+                        @elseif(!$generator->branch)
+                        <p class="text-[10px] text-slate-400 mt-1">Ubicación actual: En tránsito / Almacén</p>
+                        @endif
                     </div>
                     <div>
-                        <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Costo Adquisición</p>
-                        <p class="text-lg font-bold text-orange-600">$ {{ number_format($generator->cost, 2) }} <span class="text-xs">MXN</span></p>
+                        @if(Auth::user()->role === 'owner')
+                            {{-- Owner: solo ve el precio final asignado, sin desglose --}}
+                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Precio Asignado</p>
+                            @if($generator->owner_price)
+                            <p class="text-lg font-bold text-slate-900">$ {{ number_format($generator->owner_price, 2) }} <span class="text-xs text-slate-400">MXN</span></p>
+                            @else
+                            <p class="text-sm text-slate-400 italic">Sin precio asignado</p>
+                            @endif
+                        @else
+                            {{-- Admin: ve el costo real de adquisición --}}
+                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Costo Adquisición</p>
+                            <p class="text-lg font-bold text-orange-600">$ {{ number_format($generator->cost, 2) }} <span class="text-xs">MXN</span></p>
+                            @if($generator->owner_price)
+                            <div class="mt-1 space-y-0.5">
+                                <p class="text-[10px] text-slate-400">Precio owner: ${{ number_format($generator->owner_price, 2) }}</p>
+                                <p class="text-[10px] text-orange-500">Comisión ({{ optional($generator->assignedBranch)->commission_rate ?? 0 }}%): ${{ number_format($generator->commission_amount, 2) }}</p>
+                            </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </div>
@@ -176,8 +207,8 @@
                         <i class="fas fa-clipboard-list text-slate-300 group-hover:text-orange-500"></i>
                     </button>
                     <button onclick="openStatusModal('Lista para envío')" class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 rounded-2xl transition-all group">
-                        <span class="text-sm font-bold">Asignar a Sucursal</span>
-                        <i class="fas fa-truck-moving text-slate-300 group-hover:text-blue-500"></i>
+                        <span class="text-sm font-bold">Actualizar Estado</span>
+                        <i class="fas fa-exchange-alt text-slate-300 group-hover:text-blue-500"></i>
                     </button>
                     @if($generator->status == 'Lista para envío')
                     <button onclick="openShipmentModal()" class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 rounded-2xl transition-all group">
@@ -186,6 +217,32 @@
                     </button>
                     @endif
                 </div>
+            </div>
+
+            <!-- Card: Reasignar Sucursal Destino -->
+            <div class="bg-white rounded-3xl border border-emerald-100 shadow-sm p-6">
+                <h3 class="text-xs font-black text-emerald-700 uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <i class="fas fa-building"></i> Sucursal Destino
+                </h3>
+                <p class="text-[10px] text-slate-400 mb-4">La sucursal asignada siempre verá este generador. Cambia esto solo si el destino final cambia.</p>
+                <form action="{{ route('inventory.generators.update-status', $generator) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="{{ $generator->status }}">
+                    <select name="assigned_branch_id"
+                        class="w-full px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-slate-700 appearance-none text-sm mb-3">
+                        <option value="none" {{ is_null($generator->assigned_branch_id) ? 'selected' : '' }}>Sin asignar (Inventario General)</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ $generator->assigned_branch_id == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="comment" placeholder="Motivo del cambio (opcional)"
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-emerald-400 mb-3">
+                    <button type="submit"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] py-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 tracking-widest">
+                        <i class="fas fa-check"></i> Guardar Asignación
+                    </button>
+                </form>
             </div>
             @endif
 
@@ -312,11 +369,11 @@
             <form action="{{ route('inventory.generators.update-status', $generator) }}" method="POST">
                 @csrf
                 @method('PATCH')
-                
+
                 <div class="space-y-4 mb-6">
                     <div>
                         <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Nuevo Estado</label>
-                        <select name="status" id="modal-status-select" required 
+                        <select name="status" id="modal-status-select" required
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-semibold text-slate-700 appearance-none">
                             <option value="Recibido en almacén">Recibido en almacén</option>
                             <option value="En revisión">En revisión</option>
@@ -329,11 +386,13 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Asignar Sucursal (Opcional)</label>
-                        <select name="current_branch_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-semibold text-slate-700 appearance-none">
-                            <option value="">-- No cambiar sucursal --</option>
-                            <option value="none" {{ is_null($generator->current_branch_id) ? 'selected' : '' }}>[Desasignar / En Tránsito]</option>
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ubicación Física Actual <span class="normal-case font-normal">(opcional)</span></p>
+                        <p class="text-[10px] text-slate-400 mb-2">Solo cambia dónde está físicamente. La sucursal asignada <span class="font-bold text-emerald-600">{{ $generator->assignedBranch->name ?? 'no asignada' }}</span> no cambia.</p>
+                        <select name="current_branch_id"
+                            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-semibold text-slate-700 appearance-none text-sm">
+                            <option value="">-- No cambiar ubicación --</option>
+                            <option value="none" {{ is_null($generator->current_branch_id) ? 'selected' : '' }}>[Sin ubicación / En tránsito]</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" {{ $generator->current_branch_id == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
                             @endforeach
@@ -342,7 +401,7 @@
 
                     <div>
                         <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Observaciones / Motivo</label>
-                        <textarea name="comment" rows="3" placeholder="Escribe el motivo del cambio..." 
+                        <textarea name="comment" rows="3" placeholder="Escribe el motivo del cambio..."
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-semibold text-slate-700 resize-none"></textarea>
                     </div>
                 </div>

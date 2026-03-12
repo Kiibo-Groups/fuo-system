@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Shipment extends Model
 {
     protected $fillable = [
-        'generator_id', 
-        'shipping_company', 
-        'tracking_number', 
+        'generator_id',
+        'shipment_batch_id',
+        'shipping_company',
+        'tracking_number',
         'photo_evidence_path',
         'evidences'
     ];
@@ -20,6 +21,10 @@ class Shipment extends Model
 
     public function generator() {
         return $this->belongsTo(Generator::class);
+    }
+
+    public function batch() {
+        return $this->belongsTo(ShipmentBatch::class, 'shipment_batch_id');
     }
 
     public function branch() {

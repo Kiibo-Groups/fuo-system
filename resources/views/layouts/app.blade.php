@@ -23,7 +23,7 @@
         @include('components.header')
 
         <!-- Área de Scroll -->
-        <div class="flex-1 overflow-y-auto p-8">
+        <div class="flex-1 overflow-y-auto">
             @yield('content')
         </div>
     </main>

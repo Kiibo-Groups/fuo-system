@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ChecklistController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Owner\PosController;
 use App\Http\Controllers\Inventory\GeneratorController;
 use App\Http\Controllers\Inventory\SparePartController;
@@ -50,6 +51,11 @@ Route::middleware(['auth'])->group(function () {
         
         // Dashboard Principal
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Contabilidad y Ganancias
+        Route::get('/accounting', [AccountingController::class, 'index'])->name('accounting.index');
+        Route::post('/accounting/expenses', [AccountingController::class, 'storeExpense'])->name('accounting.expenses.store');
+        Route::delete('/accounting/expenses/{expense}', [AccountingController::class, 'destroyExpense'])->name('accounting.expenses.destroy');
 
         // CRUD Sucursales
         Route::resource('branches', BranchController::class);
@@ -117,12 +123,17 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('logistics')->name('logistics.')->middleware(['check.role:admin,owner'])->group(function () {
-        
-        // Envíos a Sucursal
+
+        // Envíos a Sucursal — Sistema de LOTES
         Route::get('/shipments', [ShipmentController::class, 'index'])->name('shipments.index');
+        Route::post('/shipments/send-batch', [ShipmentController::class, 'sendBatch'])->name('shipments.send-batch');
+        Route::post('/shipments/batch/{batch}/receive', [ShipmentController::class, 'receiveBatch'])->name('shipments.receive-batch');
+
+        // Rutas legacy (compatibilidad)
         Route::post('/shipments/send', [ShipmentController::class, 'sendToBranch'])->name('shipments.send');
         Route::post('/shipments/{shipment}/receive', [ShipmentController::class, 'receiveAtBranch'])->name('shipments.receive');
     });
+
 
     /*
     |--------------------------------------------------------------------------

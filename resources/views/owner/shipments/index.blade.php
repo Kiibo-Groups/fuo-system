@@ -1,105 +1,147 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8 max-w-5xl">
-    
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+
     <div class="mb-8 flex items-center justify-between">
         <div class="flex items-center gap-4">
-            <div class="bg-blue-500 rounded-lg p-3 text-white shadow-lg shadow-blue-500/30">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <div class="bg-blue-500 rounded-2xl p-3 text-white shadow-lg shadow-blue-500/30">
+                <i class="fas fa-boxes text-xl"></i>
             </div>
             <div>
-                <h1 class="text-3xl font-bold bg-clip-text dark:from-white dark:to-slate-300">
-                    Recepción en Sucursal
-                </h1>
-                <p class="text-slate-500 mt-1">Confirme la llegada de los equipos asignados a su sucursal</p>
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Recepción en Sucursal</h1>
+                <p class="text-slate-500 mt-1 text-sm">Confirme la llegada de los lotes asignados a su sucursal</p>
             </div>
         </div>
+        <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider">
+            {{ $incomingBatches->count() }} Lotes Pendientes
+        </span>
     </div>
 
     @if(session('success'))
-        <div class="mb-8 p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50 rounded-xl flex items-center gap-3">
-            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            {{ session('success') }}
-        </div>
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center gap-3 font-bold text-sm">
+        <i class="fas fa-check-circle text-emerald-500 text-lg"></i> {{ session('success') }}
+    </div>
     @endif
 
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden mb-8">
-        <div class="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 dark:text-white">Generadores en Camino</h3>
-            <span class="bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                {{ $incomingShipments->count() }} Pendientes
-            </span>
+    {{-- Lista de lotes --}}
+    @forelse($incomingBatches as $batch)
+    @php
+        $batchGenerators = $batch->shipments->map(fn($s) => $s->generator)->filter();
+        $batchCount = $batchGenerators->count();
+    @endphp
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm mb-6 overflow-hidden">
+
+        {{-- Header del lote --}}
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="bg-orange-500 rounded-xl p-2.5 shadow-lg">
+                    <i class="fas fa-pallet text-white text-base"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-black text-base tracking-tight">Lote #{{ $batch->id }}</h3>
+                    <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mt-0.5">
+                        {{ $batch->created_at->format('d/m/Y H:i') }} · {{ $batch->created_at->diffForHumans() }}
+                    </p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-orange-400 font-black text-2xl">{{ $batchCount }}</p>
+                <p class="text-slate-400 text-[10px] uppercase">piezas</p>
+            </div>
         </div>
-        
+
+        {{-- Datos de envío --}}
+        <div class="p-5 border-b border-slate-50">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Paquetería</p>
+                    <p class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-shipping-fast text-blue-400"></i> {{ $batch->shipping_company }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Número de Guía</p>
+                    <p class="font-mono text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg inline-block">
+                        {{ $batch->tracking_number }}
+                    </p>
+                </div>
+                @if($batch->notes)
+                <div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Observaciones</p>
+                    <p class="text-sm text-slate-600 font-medium">{{ $batch->notes }}</p>
+                </div>
+                @endif
+            </div>
+
+            {{-- Evidencias --}}
+            @if($batch->evidences && count($batch->evidences) > 0)
+            <div class="mt-4 flex flex-wrap gap-2">
+                @foreach($batch->evidences as $index => $evidence)
+                <a href="{{ Storage::url($evidence) }}" target="_blank"
+                    class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
+                    <i class="fas fa-image text-slate-400"></i> Foto {{ count($batch->evidences) > 1 ? ($index + 1) : '' }}
+                </a>
+                @endforeach
+            </div>
+            @endif
+        </div>
+
+        {{-- Generadores del lote --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest">
                     <tr>
-                        <th class="px-6 py-4">Información del Equipo</th>
-                        <th class="px-6 py-4">Datos de Envío</th>
-                        <th class="px-6 py-4">Evidencia</th>
-                        <th class="px-6 py-4text-right">Acciones</th>
+                        <th class="px-5 py-3">Folio Interno</th>
+                        <th class="px-5 py-3">Modelo / S.N.</th>
+                        <th class="px-5 py-3">Estado</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
-                    @forelse($incomingShipments as $shipment)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors group">
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-900 dark:text-white">{{ $shipment->generator->internal_folio }}</div>
-                                <div class="text-xs text-slate-500 mt-0.5">S/N: {{ $shipment->generator->serial_number }}</div>
-                                <span class="inline-block mt-2 px-2.5 py-1 text-[10px] font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                                    {{ $shipment->generator->model }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                                    {{ $shipment->shipping_company }}
-                                </div>
-                                <div class="text-xs text-slate-500 mt-1">Guía: <span class="font-mono text-slate-900 dark:text-slate-400 font-medium">{{ $shipment->tracking_number }}</span></div>
-                                <div class="text-xs text-slate-400 mt-1">Enviado: {{ $shipment->created_at->format('d/m/Y H:i') }}</div>
-                            </td>
-                            <td class="px-6 py-4 flex flex-col gap-2">
-                                @if($shipment->evidences && count($shipment->evidences) > 0)
-                                    @foreach($shipment->evidences as $index => $evidence)
-                                        <a href="{{ Storage::url($evidence) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                            Ver Foto {{ count($shipment->evidences) > 1 ? ($index + 1) : '' }}
-                                        </a>
-                                    @endforeach
-                                @elseif($shipment->photo_evidence_path)
-                                    <a href="{{ Storage::url($shipment->photo_evidence_path) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
-                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                        Ver Foto
-                                    </a>
-                                @else
-                                    <span class="text-xs text-slate-400 italic">No hay evidencia</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <form action="{{ route('logistics.shipments.receive', $shipment->generator_id) }}" method="POST" onsubmit="return confirm('¿Confirma que ha recibido físicamente este equipo en su sucursal?');">
-                                    @csrf
-                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all text-xs inline-flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        Confirmar Recepción
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
-                                <div class="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800 shadow-sm">
-                                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                                </div>
-                                No hay envíos en camino hacia esta sucursal en este momento.
-                            </td>
-                        </tr>
-                    @endforelse
+                <tbody class="divide-y divide-slate-50">
+                    @foreach($batchGenerators as $gen)
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-5 py-3">
+                            <span class="font-black text-slate-900 tracking-tighter">{{ $gen->internal_folio }}</span>
+                        </td>
+                        <td class="px-5 py-3">
+                            <div class="font-bold text-slate-700 text-xs uppercase">{{ $gen->model }}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">{{ $gen->serial_number }}</div>
+                        </td>
+                        <td class="px-5 py-3">
+                            <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
+                                <i class="fas fa-truck text-[8px]"></i> {{ $gen->status }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
+
+        {{-- Botón de recepción --}}
+        <div class="p-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-xs text-slate-500 font-medium">
+                Al confirmar, <span class="font-black text-slate-800">{{ $batchCount }} generadores</span> pasarán a estado <span class="font-black text-emerald-600">Disponible</span> en su inventario.
+            </p>
+            <form action="{{ route('logistics.shipments.receive-batch', $batch->id) }}" method="POST"
+                onsubmit="return confirm('¿Confirma que ha recibido físicamente los {{ $batchCount }} generadores del Lote #{{ $batch->id }}?');">
+                @csrf
+                <button type="submit"
+                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest py-2.5 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all">
+                    <i class="fas fa-check-double"></i> Confirmar Recepción del Lote
+                </button>
+            </form>
+        </div>
     </div>
+    @empty
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-16 text-center">
+        <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-6 border border-slate-100 shadow-sm">
+            <i class="fas fa-box-open text-3xl text-slate-300"></i>
+        </div>
+        <h3 class="font-black text-slate-700 text-lg mb-2">Sin Envíos Pendientes</h3>
+        <p class="text-slate-400 text-sm">No hay lotes en camino hacia esta sucursal en este momento.</p>
+    </div>
+    @endforelse
+
 </div>
 @endsection

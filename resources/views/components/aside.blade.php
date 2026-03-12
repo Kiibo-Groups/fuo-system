@@ -63,6 +63,10 @@
         @endif
 
         @if(Auth::user()->role === 'admin')
+            <a href="{{ route('admin.accounting.index') }}"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('admin.accounting.*')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
+                <i class="fas fa-chart-line w-5 text-emerald-400"></i> Contabilidad
+            </a>
             <a href="{{ route('admin.branches.index') }}"
                 class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('admin.branches.index')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
                 <i class="fas fa-store w-5"></i> Sucursales

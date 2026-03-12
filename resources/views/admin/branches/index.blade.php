@@ -25,6 +25,7 @@
                     <th class="px-6 py-4">ID</th>
                     <th class="px-6 py-4">Nombre / Sede</th>
                     <th class="px-6 py-4">Ubicación</th>
+                    <th class="px-6 py-4 text-center">Comisión %</th>
                     <th class="px-6 py-4 text-center">Máquinas</th>
                     <th class="px-6 py-4 text-right">Acciones</th>
                 </tr>
@@ -37,6 +38,11 @@
                         <div class="font-bold text-slate-900 uppercase">{{ $branch->name }}</div>
                     </td>
                     <td class="px-6 py-4 text-slate-600">{{ $branch->location }}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-block bg-orange-50 text-orange-600 border border-orange-100 text-xs font-black px-3 py-1 rounded-full">
+                            {{ number_format($branch->commission_rate, 2) }}%
+                        </span>
+                    </td>
                     <td class="px-6 py-4 text-center font-bold text-slate-900">{{ $branch->generators_count }}</td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex justify-end gap-2">
@@ -88,6 +94,16 @@
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700" 
                             placeholder="Ej. Av. Solidaridad 450, Santa Catarina">
                     </div>
+                    <div class="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                        <label class="block text-xs font-black text-orange-700 uppercase tracking-widest mb-1">
+                            <i class="fas fa-percentage mr-1"></i> Comisión de Sucursal (%)
+                        </label>
+                        <p class="text-[10px] text-orange-600 mb-2">Este % se suma al costo real del generador para obtener el precio que verá el owner.</p>
+                        <input type="number" name="commission_rate" id="field-commission_rate"
+                            min="0" max="100" step="0.01" value="0"
+                            class="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-bold text-slate-700"
+                            placeholder="Ej. 2.5">
+                    </div>
                     
                     <div class="pt-4 flex gap-3">
                         <button type="button" onclick="closeModal('modal-branch')" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all uppercase">Cancelar</button>
@@ -112,6 +128,7 @@
     // Inputs
     const inputName = document.getElementById('field-name');
     const inputLocation = document.getElementById('field-location');
+    const inputCommission = document.getElementById('field-commission_rate');
 
     function openCreateModal() {
         form.action = "{{ route('admin.branches.store') }}";
@@ -119,10 +136,11 @@
         title.innerText = "Nueva Sucursal";
         desc.innerText = "Registra una nueva sede en el sistema.";
         btnText.innerText = "Guardar Sucursal";
-        
+
         inputName.value = '';
         inputLocation.value = '';
-        
+        inputCommission.value = '0';
+
         modal.classList.remove('hidden');
     }
 
@@ -132,10 +150,11 @@
         title.innerText = "Editar Sucursal";
         desc.innerText = "Actualiza la información de la sede.";
         btnText.innerText = "Actualizar Cambios";
-        
+
         inputName.value = branch.name;
         inputLocation.value = branch.location;
-        
+        inputCommission.value = branch.commission_rate ?? 0;
+
         modal.classList.remove('hidden');
     }
 
