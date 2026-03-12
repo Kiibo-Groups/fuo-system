@@ -77,7 +77,7 @@
         <!-- Totales -->
         <div class="flex flex-col items-end border-b-2 border-dashed border-gray-400 pb-4 mb-4">
             <div class="flex justify-between w-full font-bold text-sm">
-                <span>TOTAL USD:</span>
+                <span>TOTAL MXN:</span>
                 <span>${{ number_format($sale->total_amount, 2) }}</span>
             </div>
             <p class="text-[9px] text-gray-500 mt-1">Garantía válida bajo términos.</p>

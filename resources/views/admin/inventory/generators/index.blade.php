@@ -120,7 +120,7 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-700 uppercase text-xs">{{ $generator->model }}</div>
-                            <div class="text-[10px] text-orange-600 font-bold tracking-tight">$ {{ number_format($generator->cost, 2) }} USD</div>
+                            <div class="text-[10px] text-orange-600 font-bold tracking-tight">$ {{ number_format($generator->cost, 2) }} MXN</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
@@ -235,7 +235,7 @@
                             placeholder="Ej. FUO-001">
                     </div>
                     <div>
-                        <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Costo (USD)</label>
+                        <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Costo (MXN)</label>
                         <input type="number" step="0.01" name="cost" id="field-cost" required 
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700" 
                             placeholder="0.00">
@@ -299,7 +299,7 @@
                     <li><span class="font-bold text-slate-700">Folio-Interno</span> <span class="text-slate-400">(Vacío = Autogenerado)</span></li>
                     <li><span class="font-bold text-slate-700">No. Serie</span> <span class="text-slate-400">(Vacío = N/A)</span></li>
                     <li><span class="font-bold text-emerald-600">Modelo</span> <span class="text-emerald-500 font-bold">(Obligatorio)</span></li>
-                    <li><span class="font-bold text-slate-700">Costo USD</span> <span class="text-slate-400">(Opcional, numérico)</span></li>
+                    <li><span class="font-bold text-slate-700">Costo MXN</span> <span class="text-slate-400">(Opcional, numérico)</span></li>
                 </ol>
             </div>
 

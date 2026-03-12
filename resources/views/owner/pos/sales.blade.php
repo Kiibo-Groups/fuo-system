@@ -51,7 +51,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 font-black text-slate-900 tracking-tight">
-                            ${{ number_format($sale->total_amount, 2) }} <span class="text-[10px] text-slate-400 font-normal">USD</span>
+                            ${{ number_format($sale->total_amount, 2) }} <span class="text-[10px] text-slate-400 font-normal">MXN</span>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button onclick="printTicket({{ $sale->id }})" class="p-2 text-slate-400 hover:text-orange-600 bg-white border border-slate-100 rounded-lg shadow-sm" title="Imprimir Ticket">

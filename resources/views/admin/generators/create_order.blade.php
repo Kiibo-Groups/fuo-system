@@ -52,7 +52,7 @@
 
                 <!-- Costo Unitario -->
                 <div class="space-y-1.5 md:col-span-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Costo Unitario de Adquisición (USD)</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Costo Unitario de Adquisición (MXN)</label>
                     <div class="relative">
                         <i class="fas fa-dollar-sign absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
                         <input type="number" step="0.01" name="cost" required placeholder="0.00"

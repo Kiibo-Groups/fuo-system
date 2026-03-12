@@ -65,7 +65,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 font-bold text-slate-700">
-                            $ {{ number_format($part->unit_cost, 2) }} <span class="text-[10px] text-slate-400">USD</span>
+                            $ {{ number_format($part->unit_cost, 2) }} <span class="text-[10px] text-slate-400">MXN</span>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -129,7 +129,7 @@
                                 placeholder="0">
                         </div>
                         <div>
-                            <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Costo Unit. (USD)</label>
+                            <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Costo Unit. (MXN)</label>
                             <input type="number" step="0.01" name="unit_cost" id="field-unit_cost" required 
                                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none font-semibold text-slate-700" 
                                 placeholder="0.00">

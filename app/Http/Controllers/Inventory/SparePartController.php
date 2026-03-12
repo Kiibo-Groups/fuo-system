@@ -62,7 +62,7 @@ class SparePartController extends Controller
             "Expires"             => "0"
         ];
 
-        $columns = ['ID', 'Nombre/Descripción', 'Stock Actual', 'Costo Unitario (USD)', 'Umbral Bajo'];
+        $columns = ['ID', 'Nombre/Descripción', 'Stock Actual', 'Costo Unitario (MXN)', 'Umbral Bajo'];
 
         $callback = function() use($parts, $columns) {
             $file = fopen('php://output', 'w');

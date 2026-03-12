@@ -72,7 +72,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Costo Adquisición</p>
-                        <p class="text-lg font-bold text-orange-600">$ {{ number_format($generator->cost, 2) }} <span class="text-xs">USD</span></p>
+                        <p class="text-lg font-bold text-orange-600">$ {{ number_format($generator->cost, 2) }} <span class="text-xs">MXN</span></p>
                     </div>
                 </div>
             </div>
@@ -246,7 +246,7 @@
                             <div class="flex justify-between items-start mb-3">
                                 <div>
                                     <p class="text-[10px] text-slate-400 font-bold uppercase">{{ $log->completed_at ? $log->completed_at->format('d/m/Y - H:i') : $log->created_at->format('d/m/Y - H:i') }}</p>
-                                    <p class="text-xs font-bold text-slate-700 mt-1">Costo Total: <span class="text-orange-600">$ {{ number_format($log->total_repair_cost, 2) }} USD</span></p>
+                                    <p class="text-xs font-bold text-slate-700 mt-1">Costo Total: <span class="text-orange-600">$ {{ number_format($log->total_repair_cost, 2) }} MXN</span></p>
                                 </div>
                                 
                                 @if(Auth::user()->role === 'admin' )

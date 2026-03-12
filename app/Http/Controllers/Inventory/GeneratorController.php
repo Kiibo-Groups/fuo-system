@@ -291,7 +291,7 @@ class GeneratorController extends Controller
             "Expires"             => "0"
         ];
 
-        $columns = ['ID', 'Folio Interno', 'No. Serie', 'Modelo', 'Costo (USD)', 'Sucursal', 'Estado', 'Fecha Registro'];
+        $columns = ['ID', 'Folio Interno', 'No. Serie', 'Modelo', 'Costo (MXN)', 'Sucursal', 'Estado', 'Fecha Registro'];
 
         $callback = function() use($generators, $columns) {
             $file = fopen('php://output', 'w');

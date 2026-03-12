@@ -38,7 +38,7 @@
                         <th class="px-6 py-4">Folio / Serie</th>
                         <th class="px-6 py-4">Modelo del Generador</th>
                         <th class="px-6 py-4 text-center">Stock</th>
-                        <th class="px-6 py-4 text-right">Costo USD</th>
+                        <th class="px-6 py-4 text-right">Costo MXN</th>
                         <th class="px-6 py-4 text-right">Imagen y Precio de Venta</th>
                     </tr>
                 </thead>

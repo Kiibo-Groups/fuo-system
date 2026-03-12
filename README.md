@@ -26,7 +26,7 @@ El sistema cuenta con 4 roles principales perfectamente delimitados:
 ### 🛠 Taller de Reparación y Diagnóstico
 - **Escáner QR:** Los talleres pueden escanear el Código de Barras / QR del generador (con la cámara del celular).
 - **Checklists Dinámicos:** Módulo para llenar parámetros vitales (Nivel de Aceite, Voltaje, Daños visuales, etc.).
-- **Control de Refacciones:** Afectación automática al inventario de piezas cuando un técnico instala partes para habilitar un equipo que "no pasó la revisión". Control estricto de los **costos de reparación ($) USD**.
+- **Control de Refacciones:** Afectación automática al inventario de piezas cuando un técnico instala partes para habilitar un equipo que "no pasó la revisión". Control estricto de los **costos de reparación ($) MXN**.
 
 ### 💳 Sistema de Punto de Venta (POS)
 - Módulo moderno, muy fluido, operando a pantalla dividida (y escondible en móviles). 
