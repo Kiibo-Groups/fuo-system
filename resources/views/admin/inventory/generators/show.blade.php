@@ -58,6 +58,15 @@
         <div class="lg:col-span-2 space-y-8">
             <!-- Card de Datos Técnicos -->
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+                <!-- Imagen del Equipo (si existe) -->
+                @if($generator->image)
+                <div class="mb-6">
+                    <img src="{{ Storage::url($generator->image) }}"
+                        alt="{{ $generator->internal_folio }}"
+                        class="w-full max-h-64 object-contain rounded-2xl border border-slate-100 bg-slate-50 shadow-sm"
+                        onerror="this.classList.add('hidden')">
+                </div>
+                @endif
                 <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                     <i class="fas fa-info-circle text-orange-500"></i> Especificaciones del Equipo
                 </h3>

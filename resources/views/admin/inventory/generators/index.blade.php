@@ -98,6 +98,7 @@
                             <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer w-4 h-4" title="Seleccionar todos">
                         </th>
                         @endif
+                        <th class="px-3 py-4 w-14"></th>
                         <th class="px-6 py-4">Folio / Serie</th>
                         <th class="px-6 py-4">Modelo del Generador</th>
                         @if(Auth::user()->role === 'admin' )
@@ -126,6 +127,20 @@
                             <input type="checkbox" name="selected_generators[]" value="{{ $generator->id }}" class="generator-checkbox rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer w-4 h-4">
                         </td>
                         @endif
+                        <td class="px-3 py-3">
+                            @if($generator->image)
+                            <a href="{{ route('inventory.generators.show', $generator) }}">
+                                <img src="{{ Storage::url($generator->image) }}"
+                                    alt="{{ $generator->internal_folio }}"
+                                    class="w-10 h-10 object-cover rounded-xl border border-slate-200 shadow-sm hover:scale-110 transition-transform"
+                                    onerror="this.style.display='none'">
+                            </a>
+                            @else
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                <i class="fas fa-image text-slate-300 text-xs"></i>
+                            </div>
+                            @endif
+                        </td>
                         <td class="px-6 py-4">
                             <div class="font-black text-slate-900 tracking-tighter">{{ $generator->internal_folio }}</div>
                             <div class="text-[10px] text-slate-400 font-mono">{{ $generator->serial_number }}</div>
@@ -383,12 +398,43 @@
 
             <form action="{{ route('inventory.generators.import.excel') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="mb-6">
+
+                {{-- Prefijo del lote (clave del feature) --}}
+                <div class="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4">
+                    <label class="block text-[10px] font-black text-violet-700 uppercase tracking-widest mb-1">
+                        <i class="fas fa-tag mr-1"></i> Prefijo de Lote (Folio Fijo)
+                    </label>
+                    <p class="text-[10px] text-violet-500 mb-3">
+                        Si el CSV no trae folios, se generarán como <strong>PREFIJO-001</strong>, <strong>PREFIJO-002</strong>…<br>
+                        Esto permite que las fotos pre-cargadas en "Fotos de Equipos" se auto-asignen correctamente.
+                    </p>
+                    <div class="flex gap-3 items-center">
+                        <div class="flex-1">
+                            <input type="text" name="folio_prefix" id="folio_prefix"
+                                placeholder="Ej: Lote-35"
+                                maxlength="30"
+                                class="w-full px-4 py-2.5 bg-white border border-violet-200 rounded-xl text-sm font-black text-slate-800 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest"
+                                oninput="this.value=this.value.toUpperCase(); updateFolioPreview()">
+                        </div>
+                        <div class="w-20">
+                            <input type="number" name="folio_start" id="folio_start"
+                                value="1" min="1" max="9999"
+                                title="Número inicial del contador"
+                                class="w-full px-3 py-2.5 bg-white border border-violet-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-violet-500 outline-none text-center"
+                                oninput="updateFolioPreview()">
+                        </div>
+                    </div>
+                    <p id="folio-preview" class="text-[10px] text-violet-600 font-bold mt-2 hidden">
+                        Vista previa: <span id="folio-preview-text" class="font-mono bg-white px-2 py-0.5 rounded border border-violet-200"></span>, <span id="folio-preview-text2" class="font-mono bg-white px-2 py-0.5 rounded border border-violet-200"></span>...
+                    </p>
+                </div>
+
+                <div class="mb-5">
                     <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Archivo (.csv)</label>
-                    <input type="file" name="file" accept=".csv, .txt" required 
+                    <input type="file" name="file" accept=".csv, .txt" required
                         class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
                 </div>
-                
+
                 <div class="flex gap-3">
                     <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all uppercase">Cancelar</button>
                     <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
@@ -396,6 +442,22 @@
                     </button>
                 </div>
             </form>
+
+            <script>
+            function updateFolioPreview() {
+                const prefix = document.getElementById('folio_prefix').value.trim();
+                const start = parseInt(document.getElementById('folio_start').value) || 1;
+                const preview = document.getElementById('folio-preview');
+                if (prefix.length > 0) {
+                    const fmt = (n) => prefix + '-' + String(n).padStart(3, '0');
+                    document.getElementById('folio-preview-text').textContent = fmt(start);
+                    document.getElementById('folio-preview-text2').textContent = fmt(start + 1);
+                    preview.classList.remove('hidden');
+                } else {
+                    preview.classList.add('hidden');
+                }
+            }
+            </script>
         </div>
     </div>
 </div>

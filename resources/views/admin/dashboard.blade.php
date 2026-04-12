@@ -3,7 +3,7 @@
 @section('content')
     <!-- Bienvenida y Acciones Rápidas -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
+        <div class="px-8 pt-4">
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">¡Hola de nuevo, {{ Auth::user()->name }}!</h1>
             <p class="text-slate-500">Aquí está el resumen operativo de hoy.</p>
         </div>

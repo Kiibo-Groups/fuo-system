@@ -387,6 +387,10 @@ class GeneratorController extends Controller
         $imported = 0;
         $failed = 0;
 
+        // Prefijo de lote y contador para folios secuenciales (ej: Lote-35-001)
+        $folioPrefix  = strtoupper(trim($request->input('folio_prefix', '')));
+        $folioCounter = max(1, (int) $request->input('folio_start', 1));
+
         if (($handle = fopen($fileRealPath, "r")) !== FALSE) {
             $rowNum = 0;
             while (($rawLine = fgets($handle)) !== FALSE) {
@@ -418,7 +422,14 @@ class GeneratorController extends Controller
                 }
 
                 if (empty($folio) || strtoupper($folio) === 'N/A' || strtoupper($folio) === 'NA') {
-                    $folio = 'FUO-IMP-' . strtoupper(substr(uniqid(), -6));
+                    // Si el usuario indicó un prefijo de lote, generar folio secuencial predecible
+                    if (!empty($folioPrefix)) {
+                        $folio = $folioPrefix . '-' . str_pad($folioCounter, 3, '0', STR_PAD_LEFT);
+                        $folioCounter++;
+                    } else {
+                        // Fallback: random (como antes)
+                        $folio = 'FUO-IMP-' . strtoupper(substr(uniqid(), -6));
+                    }
                 }
 
                 if (empty($serie) || strtoupper($serie) === 'N/A' || strtoupper($serie) === 'NA') {
@@ -447,6 +458,31 @@ class GeneratorController extends Controller
                         $gen->load('assignedBranch');
                         $gen->recalculateOwnerPrice();
                     }
+
+                    // ── AUTO-MATCH IMAGEN ────────────────────────────────
+                    // Busca imágenes cuyo folio coincida EXACTO con el generador
+                    // O cuyo folio sea un PREFIJO del generador.
+                    // Ej: imagen "LOTE-35" → asignada a LOTE-35-001, LOTE-35-002, etc.
+                    $folioNorm = strtoupper(trim($folio));
+
+                    $imageRecord = \App\Models\GeneratorImage::whereRaw(
+                        "UPPER(TRIM(internal_folio)) = ? OR UPPER(TRIM(internal_folio)) = LEFT(?, LENGTH(TRIM(internal_folio)))",
+                        [$folioNorm, $folioNorm]
+                    )->first();
+
+                    if ($imageRecord) {
+                        // Asignar imagen a este generador
+                        $gen->update(['image' => $imageRecord->file_path]);
+
+                        // Si es match EXACTO → marcarlo como matched (1 a 1)
+                        // Si es por PREFIJO  → NO marcar matched, para que todos los del lote lo reciban
+                        $isExact = strtoupper(trim($imageRecord->internal_folio)) === $folioNorm;
+                        if ($isExact) {
+                            $imageRecord->update(['generator_id' => $gen->id, 'matched' => true]);
+                        }
+                    }
+                    // ── FIN AUTO-MATCH ───────────────────────────────────
+
                     $imported++;
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Import error on row {$rowNum}: " . $e->getMessage());

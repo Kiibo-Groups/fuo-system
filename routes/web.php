@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ChecklistController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\AccountingController;
+use App\Http\Controllers\Admin\GeneratorImageController;
 use App\Http\Controllers\Owner\PosController;
 use App\Http\Controllers\Inventory\GeneratorController;
 use App\Http\Controllers\Inventory\SparePartController;
@@ -56,6 +57,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/accounting', [AccountingController::class, 'index'])->name('accounting.index');
         Route::post('/accounting/expenses', [AccountingController::class, 'storeExpense'])->name('accounting.expenses.store');
         Route::delete('/accounting/expenses/{expense}', [AccountingController::class, 'destroyExpense'])->name('accounting.expenses.destroy');
+
+        // Biblioteca de Imágenes de Generadores
+        Route::get('/generator-images', [GeneratorImageController::class, 'index'])->name('generator-images.index');
+        Route::post('/generator-images', [GeneratorImageController::class, 'store'])->name('generator-images.store');
+        Route::delete('/generator-images/{generatorImage}', [GeneratorImageController::class, 'destroy'])->name('generator-images.destroy');
+        Route::post('/generator-images/rematch', [GeneratorImageController::class, 'rematch'])->name('generator-images.rematch');
 
         // CRUD Sucursales
         Route::resource('branches', BranchController::class);
