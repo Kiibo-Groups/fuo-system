@@ -49,24 +49,40 @@ class GeneratorImageController extends Controller
         $generator = Generator::where('internal_folio', $folio)->first();
 
         $uploaded = 0;
-        foreach ($request->file('images') as $file) {
-            $path = $file->store("generator-images/{$folio}", 'public');
 
-            $imgRecord = GeneratorImage::create([
-                'internal_folio' => $folio,
-                'file_path'      => $path,
-                'original_name'  => $file->getClientOriginalName(),
-                'uploaded_by'    => Auth::id(),
-                'generator_id'   => $generator?->id,
-                'matched'        => $generator !== null,
+        try {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store("generator-images/{$folio}", 'public');
+
+                if (!$path) {
+                    throw new \Exception("El almacenamiento del archivo falló al intentar guardar '{$file->getClientOriginalName()}' en el disco público.");
+                }
+
+                $imgRecord = GeneratorImage::create([
+                    'internal_folio' => $folio,
+                    'file_path'      => $path,
+                    'original_name'  => $file->getClientOriginalName(),
+                    'uploaded_by'    => Auth::id(),
+                    'generator_id'   => $generator?->id,
+                    'matched'        => $generator !== null,
+                ]);
+
+                // Si el generador existe, asignar la primera imagen al campo `image`
+                if ($generator && !$generator->image) {
+                    $generator->update(['image' => $path]);
+                }
+
+                $uploaded++;
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error al subir imagen de generador para el folio {$folio}: " . $e->getMessage(), [
+                'exception' => $e,
+                'folio' => $folio
             ]);
 
-            // Si el generador existe, asignar la primera imagen al campo `image`
-            if ($generator && !$generator->image) {
-                $generator->update(['image' => $path]);
-            }
-
-            $uploaded++;
+            return redirect()->back()
+                ->withErrors(['images' => 'Error en el servidor al subir la imagen. Detalles: ' . $e->getMessage() . '. Verifique los permisos de escritura en la carpeta "storage".'])
+                ->withInput();
         }
 
         $msg = "{$uploaded} imagen(es) subida(s) para el folio <strong>{$folio}</strong>";
