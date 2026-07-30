@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden" id="printable-area">
         
         <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 d-print-none bg-slate-50/50">
             <div>
@@ -67,14 +67,18 @@
 <style>
     @media print {
         @page { size: landscape; margin: 1cm; }
-        body { font-size: 12px; background: white; }
+        body { background: white; margin: 0; padding: 0; }
+        body * { visibility: hidden; }
+        #printable-area, #printable-area * { visibility: visible; }
+        #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; box-shadow: none; border: none; }
+        
         .d-print-none { display: none !important; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #e2e8f0; padding: 8px; }
-        th { background-color: #f8fafc !important; color: #1e293b !important; -webkit-print-color-adjust: exact; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #e2e8f0; padding: 6px; }
+        th { background-color: #f8fafc !important; color: #1e293b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .bg-slate-50 { background-color: white !important; }
-        .border-slate-200 { border-color: #e2e8f0; }
-        .shadow-sm, .rounded-3xl { box-shadow: none; border-radius: 0; border: none; }
+        .bg-slate-800 { background-color: #1e293b !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        img { max-width: 100px; max-height: 100px; }
     }
 </style>
 @endsection

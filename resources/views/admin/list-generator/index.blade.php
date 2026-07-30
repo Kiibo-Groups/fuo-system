@@ -12,7 +12,7 @@
 
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
             
-            <form action="{{ route('admin.list-generator.process') }}" method="POST">
+            <form id="generator-form" action="{{ route('admin.list-generator.process') }}" method="POST">
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -76,12 +76,31 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-8 py-3.5 rounded-xl font-black shadow-sm hover:bg-blue-700 hover:shadow-md transition-all text-sm flex items-center gap-2">
-                        <i class="fas fa-magic"></i> Procesar y Generar Listado
+                    <button type="submit" id="submit-btn" class="bg-blue-600 text-white px-8 py-3.5 rounded-xl font-black shadow-sm hover:bg-blue-700 hover:shadow-md transition-all text-sm flex items-center gap-2">
+                        <i class="fas fa-magic" id="btn-icon"></i> <span id="btn-text">Procesar y Generar Listado</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('generator-form').addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        const icon = document.getElementById('btn-icon');
+        const text = document.getElementById('btn-text');
+        
+        // Bloquear el botón para evitar doble clic
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        // Cambiar el icono por un spinner animado
+        icon.classList.remove('fa-magic');
+        icon.classList.add('fa-spinner', 'fa-spin');
+        
+        // Cambiar el texto
+        text.innerText = 'Procesando e Investigando SKUs...';
+    });
+</script>
 @endsection
