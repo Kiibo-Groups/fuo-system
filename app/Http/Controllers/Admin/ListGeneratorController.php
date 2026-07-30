@@ -18,6 +18,8 @@ class ListGeneratorController extends Controller
 
     public function process(Request $request)
     {
+        set_time_limit(0); // Prevenir timeout de PHP en listas largas
+
         $request->validate([
             'raw_data' => 'required|string',
             'percentage' => 'required|numeric|min:0',
