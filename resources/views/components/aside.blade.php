@@ -25,6 +25,10 @@
                 class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('inventory.generators.index')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
                 <i class="fas fa-boxes w-5"></i> Inventario Global
             </a>
+            <a href="{{ route('admin.list-generator.index') }}"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('admin.list-generator.*')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
+                <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> Generador de Listados
+            </a>
         @endif
 
         @if(Auth::user()->role === 'admin')

@@ -82,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/orders/usa', [GeneratorController::class, 'storeOrder'])->name('orders.usa.store');
         Route::put('/orders/usa/{generator}', [GeneratorController::class, 'updateOrder'])->name('orders.usa.update');
         Route::delete('/orders/usa/{generator}', [GeneratorController::class, 'destroyOrder'])->name('orders.usa.destroy');
+
+        // Generador de Listados Automáticos
+        Route::get('/list-generator', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'index'])->name('list-generator.index');
+        Route::post('/list-generator/process', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'process'])->name('list-generator.process');
     });
 
     /*
