@@ -30,7 +30,7 @@
                         <th class="px-4 py-3 text-center w-12">#</th>
                         <th class="px-4 py-3 w-32">SKU</th>
                         <th class="px-4 py-3">Descripción</th>
-                        <th class="px-4 py-3 text-center w-32">Precio<br>Listado</th>
+                        <th class="px-4 py-3 text-center w-32 d-print-none">Precio<br>Listado</th>
                         <th class="px-4 py-3 text-center w-32 text-emerald-300">Precio Venta<br><span class="text-[9px] font-normal opacity-80">(Redondeado)</span></th>
                         <th class="px-4 py-3 text-center w-32">Foto</th>
                         <th class="px-4 py-3 text-center w-32">Separación</th>
@@ -42,7 +42,7 @@
                         <td class="px-4 py-3 text-center text-slate-400 font-black">{{ $index + 1 }}</td>
                         <td class="px-4 py-3 font-black text-slate-700">{{ $item['sku'] }}</td>
                         <td class="px-4 py-3 text-slate-600 font-medium">{{ $item['description'] }}</td>
-                        <td class="px-4 py-3 text-center text-slate-500 font-bold">${{ number_format($item['list_price'], 2) }}</td>
+                        <td class="px-4 py-3 text-center text-slate-500 font-bold d-print-none">${{ number_format($item['list_price'], 2) }}</td>
                         <td class="px-4 py-3 text-center text-emerald-600 font-black text-lg">
                             $ {{ number_format($item['sale_price'], 0) }}
                         </td>
