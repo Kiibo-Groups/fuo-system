@@ -9,9 +9,17 @@ use App\Models\Generator;
 
 class AuctionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $auctions = Auction::with(['generator', 'winner'])->latest()->paginate(15);
+        $query = Auction::with(['generator', 'winner'])->latest();
+        
+        $status = $request->get('status', 'all');
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $auctions = $query->paginate(15)->appends($request->all());
+        
         return view('admin.auctions.index', compact('auctions'));
     }
 
