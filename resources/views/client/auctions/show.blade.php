@@ -531,16 +531,28 @@ function prependBid(bid) {
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
 }
 
-// ---- WEBSOCKETS (Laravel Reverb via Pusher-compatible client) ----
+// ---- WEBSOCKETS (Laravel Reverb / Pusher) ----
 if (AUCTION_STATUS === 'active') {
-    const pusher = new Pusher('{{ env("REVERB_APP_KEY") }}', {
-        wsHost: '{{ env("REVERB_HOST", "localhost") }}',
-        wsPort: {{ env("REVERB_PORT", 8080) }},
-        wssPort: {{ env("REVERB_PORT", 8080) }},
-        forceTLS: '{{ env("REVERB_SCHEME", "http") }}' === 'https',
-        enabledTransports: ['ws', 'wss'],
-        cluster: 'mt1', // unused but required
-    });
+    const isPusher = '{{ env("BROADCAST_CONNECTION") }}' === 'pusher';
+    
+    let pusherConfig = {};
+    if (isPusher) {
+        pusherConfig = {
+            cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+            forceTLS: true
+        };
+    } else {
+        pusherConfig = {
+            wsHost: '{{ env("REVERB_HOST", "localhost") }}',
+            wsPort: {{ env("REVERB_PORT", 8080) }},
+            wssPort: {{ env("REVERB_PORT", 8080) }},
+            forceTLS: '{{ env("REVERB_SCHEME", "http") }}' === 'https',
+            enabledTransports: ['ws', 'wss'],
+            cluster: 'mt1', // unused but required
+        };
+    }
+
+    const pusher = new Pusher(isPusher ? '{{ env("PUSHER_APP_KEY") }}' : '{{ env("REVERB_APP_KEY") }}', pusherConfig);
 
     const channel = pusher.subscribe('auction.' + AUCTION_ID);
     channel.bind('App\\Events\\BidPlaced', data => {
