@@ -29,6 +29,16 @@
                 class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('admin.list-generator.*')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
                 <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> Generador de Listados
             </a>
+            <a href="{{ route('admin.auctions.index') }}"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('admin.auctions.*')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
+                <i class="fas fa-gavel w-5 text-amber-400"></i> Subastas
+                @php $liveAuctions = \App\Models\Auction::where('status', 'active')->count(); @endphp
+                @if($liveAuctions > 0)
+                <span class="ml-auto flex items-center gap-1 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                    <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span> {{ $liveAuctions }} LIVE
+                </span>
+                @endif
+            </a>
         @endif
 
         @if(Auth::user()->role === 'admin')
@@ -128,6 +138,13 @@
                 class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('store.reservations')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
                 <i class="fas fa-bookmark w-5"></i> Mis Separaciones
             </a>
+        @endif
+        @if(Auth::user()->role === 'client')
+            <a href="{{ route('store.auctions.index') }}"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 @if(request()->routeIs('store.auctions.*')) bg-slate-800 text-white @else hover:bg-slate-800 hover:text-white @endif rounded-xl transition-all text-sm">
+                <i class="fas fa-gavel w-5 text-amber-400"></i> Subastas en Vivo
+            </a>
+            
         @endif
     </nav>
     <div class="p-4 border-t border-slate-800">

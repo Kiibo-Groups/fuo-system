@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('reservations:release')->hourly();
+Schedule::job(new \App\Jobs\CloseAuctionsJob)->everyMinute();

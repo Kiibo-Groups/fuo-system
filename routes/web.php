@@ -17,6 +17,8 @@ use App\Http\Controllers\Inventory\SparePartController;
 use App\Http\Controllers\Operations\RevisionController;
 use App\Http\Controllers\Operations\WorkshopController;
 use App\Http\Controllers\Logistics\ShipmentController;
+use App\Http\Controllers\Admin\AuctionController;
+use App\Http\Controllers\Client\BidController;
 use App\Http\Controllers\Client\ReservationController;
 
 /*
@@ -86,6 +88,10 @@ Route::middleware(['auth'])->group(function () {
         // Generador de Listados Automáticos
         Route::get('/list-generator', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'index'])->name('list-generator.index');
         Route::post('/list-generator/process', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'process'])->name('list-generator.process');
+
+        // Subastas (Admin)
+        Route::resource('auctions', AuctionController::class)->only(['index', 'create', 'store', 'show']);
+        Route::patch('auctions/{auction}/cancel', [AuctionController::class, 'cancel'])->name('auctions.cancel');
     });
 
     /*
@@ -159,7 +165,14 @@ Route::middleware(['auth'])->group(function () {
         // Sistema de Separación (4 Horas)
         Route::post('/reserve/{generator}', [ReservationController::class, 'reserve'])->name('reserve');
         Route::get('/reservations', [ReservationController::class, 'myReservations'])->name('reservations');
+
+        // Subastas (Cliente - Ver)
+        Route::get('/auctions', [\App\Http\Controllers\Client\AuctionViewController::class, 'index'])->name('auctions.index');
+        Route::get('/auctions/{auction}', [\App\Http\Controllers\Client\AuctionViewController::class, 'show'])->name('auctions.show'); // name: store.auctions.show
     });
+
+    // Pujas (autenticado - cualquier rol)
+    Route::post('/auctions/{auction}/bids', [BidController::class, 'store'])->name('bids.store');
 
     /*
     |--------------------------------------------------------------------------
