@@ -13,6 +13,7 @@ class AuctionViewController extends Controller
     public function index()
     {
         $auctions = Auction::with(['generator', 'bids'])
+            ->visibleForUser(auth()->user())
             ->whereIn('status', ['active', 'pending', 'finished'])
             ->orderByRaw("FIELD(status, 'active', 'pending', 'finished')")
             ->orderBy('end_time', 'asc')
@@ -26,6 +27,11 @@ class AuctionViewController extends Controller
      */
     public function show(Auction $auction)
     {
+        $user = auth()->user();
+        if ($auction->branch_id !== null && $user->branch_id !== null && $auction->branch_id !== $user->branch_id) {
+            abort(403, 'No tienes permiso para ver esta subasta.');
+        }
+
         $auction->load(['generator.assignedBranch', 'winner', 'bids.user']);
         return view('client.auctions.show', compact('auction'));
     }

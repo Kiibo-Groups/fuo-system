@@ -60,8 +60,26 @@
                         @endforeach
                     </div>
                     @error('generator_id')
-                    <p class="text-red-500 text-xs mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
+
+                    {{-- Branch Selection --}}
+                    <div class="mt-6 border-t border-slate-100 pt-5">
+                        <label for="branch_id" class="block text-sm font-bold text-slate-700 mb-1">
+                            <i class="fas fa-map-marker-alt text-amber-500 mr-1"></i> Sucursal Destino
+                        </label>
+                        <select name="branch_id" id="branch_id"
+                                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-50 transition-all">
+                            <option value="">Todas las sucursales (Global)</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-1">Solo los clientes de esta sucursal (o globales) podrán ver y pujar en esta subasta.</p>
+                        @error('branch_id')
+                            <p class="text-red-500 text-xs mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Pricing --}}

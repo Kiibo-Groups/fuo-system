@@ -26,13 +26,15 @@ class AuctionController extends Controller
     public function create(Request $request)
     {
         $generators = Generator::whereNotIn('status', ['En subasta', 'Vendido'])->get();
-        return view('admin.auctions.create', compact('generators'));
+        $branches = \App\Models\Branch::orderBy('name')->get();
+        return view('admin.auctions.create', compact('generators', 'branches'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'generator_id' => 'required|exists:generators,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'start_price' => 'required|numeric|min:0',
             'min_increment' => 'required|numeric|min:1',
             'start_time' => 'required|date',

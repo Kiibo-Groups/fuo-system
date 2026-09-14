@@ -89,6 +89,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/list-generator', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'index'])->name('list-generator.index');
         Route::post('/list-generator/process', [\App\Http\Controllers\Admin\ListGeneratorController::class, 'process'])->name('list-generator.process');
 
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PANEL ADMINISTRADOR - SOLO ADMIN (SUPERADMIN)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')->name('admin.')->middleware(['check.role:admin'])->group(function () {
         // Subastas (Admin)
         Route::resource('auctions', AuctionController::class)->only(['index', 'create', 'store', 'show']);
         Route::patch('auctions/{auction}/cancel', [AuctionController::class, 'cancel'])->name('auctions.cancel');
@@ -169,10 +177,9 @@ Route::middleware(['auth'])->group(function () {
         // Subastas (Cliente - Ver)
         Route::get('/auctions', [\App\Http\Controllers\Client\AuctionViewController::class, 'index'])->name('auctions.index');
         Route::get('/auctions/{auction}', [\App\Http\Controllers\Client\AuctionViewController::class, 'show'])->name('auctions.show'); // name: store.auctions.show
+        // Pujas (Solo clientes)
+        Route::post('/auctions/{auction}/bids', [BidController::class, 'store'])->name('bids.store');
     });
-
-    // Pujas (autenticado - cualquier rol)
-    Route::post('/auctions/{auction}/bids', [BidController::class, 'store'])->name('bids.store');
 
     /*
     |--------------------------------------------------------------------------
