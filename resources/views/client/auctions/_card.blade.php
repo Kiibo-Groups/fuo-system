@@ -8,6 +8,7 @@
     $sc = $statusConfig[$auction->status] ?? $statusConfig['pending'];
     $currentPrice = $auction->current_price > 0 ? $auction->current_price : $auction->start_price;
     $bidsCount = $auction->bids()->count();
+    $firstAsset = $auction->assets->where('type', 'image')->first();
 @endphp
 
 <a href="{{ route('store.auctions.show', $auction) }}"
@@ -17,7 +18,12 @@
     <div class="h-1.5 {{ $auction->status === 'active' ? 'bg-gradient-to-r from-red-400 to-red-500' : ($auction->status === 'pending' ? 'bg-gradient-to-r from-amber-400 to-orange-400' : 'bg-slate-200') }}"></div>
 
     {{-- Generator image/placeholder --}}
-    @if($auction->generator->image && Storage::disk('public')->exists($auction->generator->image))
+    @if($firstAsset && Storage::disk('public')->exists($firstAsset->file_path))
+    <div class="h-40 overflow-hidden">
+        <img src="{{ Storage::url($firstAsset->file_path) }}" alt="{{ $auction->generator->model }}"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+    </div>
+    @elseif($auction->generator->image && Storage::disk('public')->exists($auction->generator->image))
     <div class="h-40 overflow-hidden">
         <img src="{{ Storage::url($auction->generator->image) }}" alt="{{ $auction->generator->model }}"
              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">

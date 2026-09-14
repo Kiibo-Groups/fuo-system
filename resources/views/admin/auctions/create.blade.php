@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <form action="{{ route('admin.auctions.store') }}" method="POST" id="auctionForm">
+    <form action="{{ route('admin.auctions.store') }}" method="POST" id="auctionForm" enctype="multipart/form-data">
         @csrf
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
@@ -133,6 +133,30 @@
                     </div>
                     <p class="text-xs text-slate-400 mt-3"><i class="fas fa-info-circle mr-1"></i>El plazo de pago es el tiempo que tiene el ganador para completar el pago después de que cierre la subasta.</p>
                 </div>
+
+                {{-- Multimedia Assets --}}
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-black">4</span>
+                        Archivos Multimedia (Fotos / Videos)
+                    </h3>
+                    <div class="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50 transition-colors group text-center" id="dropzone">
+                        <input type="file" name="assets[]" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-msvideo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="flex justify-center mb-3">
+                            <div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fas fa-cloud-upload-alt text-amber-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700 mb-1">Arrastra tus archivos aquí o haz clic</h4>
+                        <p class="text-xs text-slate-400">Máximo 20 MB por archivo. Formatos permitidos: JPG, PNG, WEBP, MP4, MOV.</p>
+                    </div>
+                    @error('assets.*')
+                        <p class="text-red-500 text-xs mt-2"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
+                    @enderror
+                    
+                    {{-- Preview List --}}
+                    <div id="filePreviewContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-4 empty:hidden"></div>
+                </div>
             </div>
 
             {{-- RIGHT: Preview & Submit --}}
@@ -226,6 +250,43 @@ document.getElementById('generatorSearch').addEventListener('input', e => {
     document.querySelectorAll('.generator-card').forEach(card => {
         const match = card.dataset.folio.includes(q) || card.dataset.model.includes(q);
         card.style.display = match ? '' : 'none';
+    });
+});
+// File Upload Preview
+const fileInput = document.getElementById('fileInput');
+const filePreviewContainer = document.getElementById('filePreviewContainer');
+
+fileInput.addEventListener('change', function(e) {
+    filePreviewContainer.innerHTML = '';
+    const files = Array.from(e.target.files);
+    
+    files.forEach((file, index) => {
+        const reader = new FileReader();
+        const div = document.createElement('div');
+        div.className = 'relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group';
+        
+        if (file.type.startsWith('image/')) {
+            reader.onload = function(e) {
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="text-white text-[10px] font-bold px-2 truncate w-full text-center">${file.name}</span>
+                    </div>
+                `;
+            }
+            reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+            div.innerHTML = `
+                <div class="w-full h-full flex items-center justify-center bg-slate-800">
+                    <i class="fas fa-video text-slate-400 text-xl"></i>
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-black/60 p-1 backdrop-blur-sm">
+                    <div class="text-white text-[9px] font-bold truncate text-center">${file.name}</div>
+                </div>
+            `;
+        }
+        
+        filePreviewContainer.appendChild(div);
     });
 });
 </script>

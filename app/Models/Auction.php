@@ -39,4 +39,9 @@ class Auction extends Model
     {
         return $this->belongsTo(User::class, 'winner_user_id');
     }
+
+    public function assets()
+    {
+        return $this->hasMany(AuctionAsset::class)->orderBy('order', 'asc');
+    }
 }

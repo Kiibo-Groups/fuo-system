@@ -3,6 +3,8 @@
 @section('content')
 {{-- Premium Auction Room --}}
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -95,11 +97,48 @@
                         Folio: {{ $auction->generator->internal_folio }} &nbsp;·&nbsp; S/N: {{ $auction->generator->serial_number }}
                     </p>
 
-                    {{-- Generator Image or Placeholder --}}
-                    @if($auction->generator->image && Storage::disk('public')->exists($auction->generator->image))
+                    {{-- Generator Media Gallery --}}
+                    @if($auction->assets && $auction->assets->count() > 0)
+                    <div class="mb-5 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl shadow-black/40">
+                        <div class="swiper main-swiper bg-slate-900 h-64 lg:h-96 w-full relative">
+                            <div class="swiper-wrapper">
+                                @foreach($auction->assets as $asset)
+                                <div class="swiper-slide flex items-center justify-center">
+                                    @if($asset->type === 'image')
+                                    <img src="{{ Storage::url($asset->file_path) }}" class="w-full h-full object-cover">
+                                    @elseif($asset->type === 'video')
+                                    <video src="{{ Storage::url($asset->file_path) }}" controls class="w-full h-full object-contain bg-black"></video>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                            <div class="swiper-button-next !text-white !w-10 !h-10 bg-black/30 rounded-full backdrop-blur-md border border-white/10 hover:bg-black/50 transition-colors after:!text-sm"></div>
+                            <div class="swiper-button-prev !text-white !w-10 !h-10 bg-black/30 rounded-full backdrop-blur-md border border-white/10 hover:bg-black/50 transition-colors after:!text-sm"></div>
+                            <div class="swiper-pagination !bottom-2"></div>
+                        </div>
+                        @if($auction->assets->count() > 1)
+                        <div class="swiper thumb-swiper h-24 bg-slate-800 border-t border-slate-700">
+                            <div class="swiper-wrapper">
+                                @foreach($auction->assets as $asset)
+                                <div class="swiper-slide cursor-pointer opacity-40 [&.swiper-slide-thumb-active]:opacity-100 transition-opacity border-r border-slate-700 last:border-0 relative">
+                                    @if($asset->type === 'image')
+                                    <img src="{{ Storage::url($asset->file_path) }}" class="w-full h-full object-cover">
+                                    @else
+                                    <div class="w-full h-full bg-slate-900 flex items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-black/30 z-10"></div>
+                                        <i class="fas fa-play text-white/70 text-xl z-20"></i>
+                                    </div>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @elseif($auction->generator->image && Storage::disk('public')->exists($auction->generator->image))
                     <div class="rounded-3xl overflow-hidden mb-5 shadow-2xl shadow-black/40 border border-slate-700">
                         <img src="{{ Storage::url($auction->generator->image) }}" alt="{{ $auction->generator->model }}"
-                             class="w-full h-64 lg:h-72 object-cover">
+                             class="w-full h-64 lg:h-96 object-cover">
                     </div>
                     @else
                     <div class="rounded-3xl bg-slate-900 border border-slate-700 h-56 flex flex-col items-center justify-center mb-5 shadow-2xl shadow-black/40 overflow-hidden">
@@ -359,8 +398,30 @@
 </div>
 
 {{-- ============ SCRIPTS ============ --}}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
+// ---- GALLERY SWIPER ----
+if (document.querySelector('.main-swiper')) {
+    const thumbSwiper = new Swiper('.thumb-swiper', {
+        spaceBetween: 0,
+        slidesPerView: 4,
+        freeMode: true,
+        watchSlidesProgress: true,
+        breakpoints: { 640: { slidesPerView: 5 }, 1024: { slidesPerView: 6 } }
+    });
+    const mainSwiper = new Swiper('.main-swiper', {
+        spaceBetween: 0,
+        navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+        pagination: { el: '.swiper-pagination', clickable: true },
+        thumbs: { swiper: thumbSwiper },
+        on: {
+            slideChange: function () {
+                document.querySelectorAll('.main-swiper video').forEach(v => v.pause());
+            }
+        }
+    });
+}
 const AUCTION_ID   = {{ $auction->id }};
 const AUCTION_STATUS = '{{ $auction->status }}';
 const END_TIME_TS  = {{ $auction->end_time->timestamp }};

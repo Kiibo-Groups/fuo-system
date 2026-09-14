@@ -38,6 +38,7 @@ class AuctionController extends Controller
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'payment_deadline' => 'required|date|after:end_time',
+            'assets.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:20480',
         ]);
 
         $generator = Generator::findOrFail($validated['generator_id']);
@@ -49,6 +50,21 @@ class AuctionController extends Controller
             'current_price' => 0,
             'status' => $status
         ]));
+
+        if ($request->hasFile('assets')) {
+            foreach ($request->file('assets') as $index => $file) {
+                $path = $file->store('auctions', 'public');
+                $mime = $file->getMimeType();
+                $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
+                
+                \App\Models\AuctionAsset::create([
+                    'auction_id' => $auction->id,
+                    'file_path' => $path,
+                    'type' => $type,
+                    'order' => $index
+                ]);
+            }
+        }
 
         // Actualizar el generador
         $generator->status = 'En subasta';
