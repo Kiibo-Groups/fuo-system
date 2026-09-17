@@ -45,126 +45,135 @@
         @endforeach
     </div>
 
-    {{-- Auction Cards Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        @forelse($auctions as $auction)
-        @php
-            $statusConfig = [
-                'active'    => ['bg' => 'bg-emerald-500', 'text' => 'text-emerald-600', 'bgLight' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'label' => 'EN VIVO', 'pulse' => true],
-                'pending'   => ['bg' => 'bg-amber-500',   'text' => 'text-amber-600',   'bgLight' => 'bg-amber-50',   'border' => 'border-amber-200',   'label' => 'PRÓXIMA',  'pulse' => false],
-                'finished'  => ['bg' => 'bg-slate-400',   'text' => 'text-slate-500',   'bgLight' => 'bg-slate-50',   'border' => 'border-slate-200',   'label' => 'CERRADA',  'pulse' => false],
-                'cancelled' => ['bg' => 'bg-red-400',     'text' => 'text-red-500',     'bgLight' => 'bg-red-50',     'border' => 'border-red-200',     'label' => 'CANCELADA','pulse' => false],
-            ];
-            $sc = $statusConfig[$auction->status] ?? $statusConfig['pending'];
-            $currentPrice = $auction->current_price > 0 ? $auction->current_price : $auction->start_price;
-            $bidsCount = $auction->bids()->count();
-        @endphp
+    {{-- Auctions Table --}}
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-5 overflow-x-auto">
+            <table id="auctionsTable" class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Generador</th>
+                        <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                        <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Precio / Pujas</th>
+                        <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Fechas</th>
+                        <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @forelse($auctions as $auction)
+                    @php
+                        $statusConfig = [
+                            'active'    => ['bg' => 'bg-emerald-500', 'text' => 'text-emerald-600', 'bgLight' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'label' => 'EN VIVO', 'pulse' => true],
+                            'pending'   => ['bg' => 'bg-amber-500',   'text' => 'text-amber-600',   'bgLight' => 'bg-amber-50',   'border' => 'border-amber-200',   'label' => 'PRÓXIMA',  'pulse' => false],
+                            'finished'  => ['bg' => 'bg-slate-400',   'text' => 'text-slate-500',   'bgLight' => 'bg-slate-50',   'border' => 'border-slate-200',   'label' => 'CERRADA',  'pulse' => false],
+                            'cancelled' => ['bg' => 'bg-red-400',     'text' => 'text-red-500',     'bgLight' => 'bg-red-50',     'border' => 'border-red-200',     'label' => 'CANCELADA','pulse' => false],
+                        ];
+                        $sc = $statusConfig[$auction->status] ?? $statusConfig['pending'];
+                        $currentPrice = $auction->current_price > 0 ? $auction->current_price : $auction->start_price;
+                        $bidsCount = $auction->bids()->count();
+                    @endphp
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="py-4 px-4 align-top">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0 text-amber-400">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900 text-sm leading-tight">{{ $auction->generator->model ?? 'N/A' }}</div>
+                                    <div class="text-xs text-slate-400 font-mono">{{ $auction->generator->internal_folio ?? '' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 align-top">
+                            <div class="inline-flex items-center gap-1.5 {{ $sc['bgLight'] }} {{ $sc['border'] }} border px-2 py-1 rounded-md">
+                                @if($sc['pulse'])
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $sc['bg'] }} opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 {{ $sc['bg'] }}"></span>
+                                </span>
+                                @else
+                                <span class="h-2 w-2 rounded-full {{ $sc['bg'] }}"></span>
+                                @endif
+                                <span class="text-[10px] font-black {{ $sc['text'] }} tracking-widest">{{ $sc['label'] }}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 align-top">
+                            <div class="text-sm font-black text-slate-900">${{ number_format($currentPrice, 2) }}</div>
+                            <div class="text-xs text-slate-400"><i class="fas fa-gavel text-amber-500 mr-1"></i>{{ $bidsCount }} puja(s)</div>
+                        </td>
+                        <td class="py-4 px-4 align-top">
+                            @if($auction->status === 'active')
+                                <div class="text-xs text-orange-600 font-bold mb-1" data-end="{{ $auction->end_time->timestamp }}" data-countdown>
+                                    <i class="fas fa-hourglass-half animate-pulse mr-1"></i><span class="countdown-display">Calculando...</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400">Fin: {{ $auction->end_time->format('d/m/Y H:i') }}</div>
+                            @elseif($auction->status === 'pending')
+                                <div class="text-xs text-amber-600 font-bold mb-1">
+                                    <i class="fas fa-clock mr-1"></i>Inicia: {{ $auction->start_time->format('d/m/Y H:i') }}
+                                </div>
+                            @else
+                                <div class="text-xs text-slate-500 font-bold mb-1">
+                                    <i class="fas fa-flag-checkered mr-1"></i>Finalizó: {{ $auction->end_time->format('d/m/Y H:i') }}
+                                </div>
+                                @if($auction->winner)
+                                <div class="text-[10px] text-emerald-600 font-semibold"><i class="fas fa-trophy text-amber-500 mr-1"></i> {{ $auction->winner->name }}</div>
+                                @endif
+                            @endif
+                        </td>
+                        <td class="py-4 px-4 align-top text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.auctions.show', $auction) }}"
+                                   class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                                
+                                @if($auction->status === 'pending' || $auction->status === 'active')
+                                <form action="{{ route('admin.auctions.cancel', $auction) }}" method="POST" onsubmit="return confirm('¿Cancelar esta subasta?');" class="inline">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </form>
+                                @endif
 
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden group">
-
-            {{-- Card Top Band --}}
-            <div class="h-1.5 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-
-            <div class="p-5">
-                {{-- Generator Info --}}
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-2xl bg-slate-900 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-bolt text-amber-400"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-slate-900 text-sm leading-tight">{{ $auction->generator->model ?? 'N/A' }}</div>
-                            <div class="text-xs text-slate-400 font-mono">{{ $auction->generator->internal_folio ?? '' }}</div>
-                        </div>
-                    </div>
-
-                    {{-- Status Badge --}}
-                    <div class="flex items-center gap-1.5 {{ $sc['bgLight'] }} {{ $sc['border'] }} border px-2.5 py-1 rounded-full">
-                        @if($sc['pulse'])
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ $sc['bg'] }} opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 {{ $sc['bg'] }}"></span>
-                        </span>
-                        @else
-                        <span class="h-2 w-2 rounded-full {{ $sc['bg'] }}"></span>
-                        @endif
-                        <span class="text-[10px] font-black {{ $sc['text'] }} tracking-widest">{{ $sc['label'] }}</span>
-                    </div>
-                </div>
-
-                {{-- Price Info --}}
-                <div class="bg-slate-50 rounded-2xl p-4 mb-4">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Puja Actual</span>
-                        <span class="text-xs text-slate-400"><i class="fas fa-gavel mr-1 text-amber-500"></i>{{ $bidsCount }} puja{{ $bidsCount !== 1 ? 's' : '' }}</span>
-                    </div>
-                    <div class="text-2xl font-black text-slate-900">${{ number_format($currentPrice, 2) }}</div>
-                    <div class="text-xs text-slate-400 mt-0.5">Precio base: ${{ number_format($auction->start_price, 2) }} · Incremento: ${{ number_format($auction->min_increment, 2) }}</div>
-                </div>
-
-                {{-- Countdown / Dates --}}
-                @if($auction->status === 'active')
-                <div class="flex items-center gap-2 text-xs text-slate-500 mb-4"
-                     data-end="{{ $auction->end_time->timestamp }}"
-                     data-countdown>
-                    <i class="fas fa-hourglass-half text-orange-500 animate-pulse"></i>
-                    <span class="countdown-display font-semibold text-orange-600">Calculando...</span>
-                </div>
-                @elseif($auction->status === 'pending')
-                <div class="flex items-center gap-2 text-xs text-slate-500 mb-4">
-                    <i class="fas fa-calendar-alt text-amber-500"></i>
-                    <span>Inicia: {{ $auction->start_time->format('d/m/Y H:i') }}</span>
-                </div>
-                @else
-                <div class="flex items-center gap-2 text-xs text-slate-500 mb-4">
-                    <i class="fas fa-flag-checkered text-slate-400"></i>
-                    <span>Finalizó: {{ $auction->end_time->format('d/m/Y H:i') }}</span>
-                    @if($auction->winner)
-                    · <span class="text-emerald-600 font-semibold"><i class="fas fa-trophy text-amber-500"></i> {{ $auction->winner->name }}</span>
-                    @endif
-                </div>
-                @endif
-
-                {{-- Footer Actions --}}
-                <div class="flex gap-2">
-                    <a href="{{ route('admin.auctions.show', $auction) }}"
-                       class="flex-1 text-center bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-slate-800 transition-colors">
-                        Ver Subasta
-                    </a>
-                    @if($auction->status === 'pending' || $auction->status === 'active')
-                    <form action="{{ route('admin.auctions.cancel', $auction) }}" method="POST"
-                          onsubmit="return confirm('¿Cancelar esta subasta?')">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="px-3 py-2.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-xs transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </form>
-                    @endif
-                </div>
-            </div>
+                                @if($auction->status === 'cancelled' || ($auction->status === 'finished' && !$auction->winner))
+                                <form action="{{ route('admin.auctions.destroy', $auction) }}" method="POST" onsubmit="return confirm('¿Eliminar permanentemente esta subasta?');" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="py-12 text-center">
+                            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-gavel text-2xl text-slate-300"></i>
+                            </div>
+                            <h3 class="text-slate-700 font-bold text-base mb-1">Sin subastas</h3>
+                            <p class="text-slate-400 text-sm mb-4">Aún no hay subastas para mostrar en esta vista.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @empty
-        <div class="col-span-3 text-center py-24">
-            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-gavel text-3xl text-slate-300"></i>
-            </div>
-            <h3 class="text-slate-700 font-bold text-lg mb-1">Sin subastas aún</h3>
-            <p class="text-slate-400 text-sm mb-6">Crea la primera subasta para un generador disponible.</p>
-            <a href="{{ route('admin.auctions.create') }}"
-               class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-orange-200 hover:scale-105 transition-transform">
-                <i class="fas fa-plus"></i> Crear Subasta
-            </a>
-        </div>
-        @endforelse
     </div>
-
-    {{-- Pagination --}}
-    @if($auctions->hasPages())
-    <div class="mt-8">{{ $auctions->links() }}</div>
-    @endif
 </div>
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
+$(document.ready(function() {
+    $('#auctionsTable').DataTable({
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        ordering: false, // Ya vienen ordenadas del servidor (active, pending, etc)
+        pageLength: 25,
+    });
+});
 document.querySelectorAll('[data-countdown]').forEach(el => {
     const endTs = parseInt(el.dataset.end) * 1000;
     const display = el.querySelector('.countdown-display');

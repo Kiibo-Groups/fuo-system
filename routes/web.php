@@ -98,7 +98,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::prefix('admin')->name('admin.')->middleware(['check.role:admin'])->group(function () {
         // Subastas (Admin)
-        Route::resource('auctions', AuctionController::class)->only(['index', 'create', 'store', 'show']);
+        Route::resource('auctions', AuctionController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
         Route::patch('auctions/{auction}/cancel', [AuctionController::class, 'cancel'])->name('auctions.cancel');
     });
 

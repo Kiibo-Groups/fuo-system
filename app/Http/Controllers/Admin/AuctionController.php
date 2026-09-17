@@ -11,7 +11,9 @@ class AuctionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Auction::with(['generator', 'winner'])->latest();
+        $query = Auction::with(['generator', 'winner'])
+            ->orderByRaw("FIELD(status, 'active', 'pending', 'finished', 'cancelled')")
+            ->orderBy('end_time', 'asc');
         
         $status = $request->get('status', 'all');
         if ($status !== 'all') {
@@ -97,5 +99,26 @@ class AuctionController extends Controller
         event(new \App\Events\AuctionStatusChanged($auction));
 
         return back()->with('success', 'Subasta cancelada.');
+    }
+    public function destroy(Auction $auction)
+    {
+        if (!in_array($auction->status, ['cancelled', 'finished'])) {
+            return back()->with('error', 'Solo se pueden eliminar subastas finalizadas o canceladas.');
+        }
+
+        if ($auction->status === 'finished' && $auction->winner_user_id) {
+            return back()->with('error', 'No se puede eliminar una subasta que tiene un ganador.');
+        }
+
+        // Eliminar las imágenes/videos asociados si existen
+        foreach ($auction->assets as $asset) {
+            if (\Storage::disk('public')->exists($asset->file_path)) {
+                \Storage::disk('public')->delete($asset->file_path);
+            }
+        }
+        
+        $auction->delete();
+
+        return redirect()->route('admin.auctions.index')->with('success', 'Subasta eliminada correctamente.');
     }
 }

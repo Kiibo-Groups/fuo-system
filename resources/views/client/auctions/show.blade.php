@@ -403,18 +403,22 @@
 <script>
 // ---- GALLERY SWIPER ----
 if (document.querySelector('.main-swiper')) {
-    const thumbSwiper = new Swiper('.thumb-swiper', {
-        spaceBetween: 0,
-        slidesPerView: 4,
-        freeMode: true,
-        watchSlidesProgress: true,
-        breakpoints: { 640: { slidesPerView: 5 }, 1024: { slidesPerView: 6 } }
-    });
+    let thumbSwiper = null;
+    if (document.querySelector('.thumb-swiper')) {
+        thumbSwiper = new Swiper('.thumb-swiper', {
+            spaceBetween: 0,
+            slidesPerView: 4,
+            freeMode: true,
+            watchSlidesProgress: true,
+            breakpoints: { 640: { slidesPerView: 5 }, 1024: { slidesPerView: 6 } }
+        });
+    }
+
     const mainSwiper = new Swiper('.main-swiper', {
         spaceBetween: 0,
         navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
         pagination: { el: '.swiper-pagination', clickable: true },
-        thumbs: { swiper: thumbSwiper },
+        thumbs: thumbSwiper ? { swiper: thumbSwiper } : {},
         on: {
             slideChange: function () {
                 document.querySelectorAll('.main-swiper video').forEach(v => v.pause());
@@ -484,7 +488,7 @@ if (bidForm) {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Procesando...';
 
         try {
-            const res = await fetch(`/auctions/${AUCTION_ID}/bids`, {
+            const res = await fetch(`/store/auctions/${AUCTION_ID}/bids`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
