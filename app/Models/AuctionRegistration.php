@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Bid extends Model
+class AuctionRegistration extends Model
 {
-
     protected $fillable = [
         'auction_id',
         'user_id',
-        'amount',
-        'is_auto',
+        'status',
+        'payment_id',
+        'hold_amount',
+        'max_bid'
     ];
 
     public function auction()

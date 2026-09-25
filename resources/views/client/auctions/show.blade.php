@@ -212,6 +212,7 @@
                             @if($auction->status === 'active')
                             {{-- Bid Form --}}
                             @auth
+                            @if($isRegistered)
                             <form id="bidForm">
                                 @csrf
                                 <div class="flex gap-2 mb-3">
@@ -227,6 +228,21 @@
                                             class="glow-button bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-black px-6 py-3.5 rounded-2xl text-sm flex-shrink-0 flex items-center gap-2">
                                         <i class="fas fa-gavel"></i> ¡Pujar!
                                     </button>
+                                </div>
+
+                                {{-- Proxy Bidding Toggle --}}
+                                <div class="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5"><i class="fas fa-robot text-indigo-500"></i> Auto-Puja (Proxy Bidding)</label>
+                                        <p class="text-[10px] text-slate-500">Definir un tope y pujaremos por ti.</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="isProxyBid" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                                    </label>
+                                </div>
+                                <div id="currentMaxBidInfo" class="mb-3 text-[11px] text-indigo-600 font-semibold {{ $myMaxBid ? '' : 'hidden' }}">
+                                    Tu puja máxima activa: ${{ number_format($myMaxBid ?? 0, 2) }}
                                 </div>
 
                                 {{-- Quick bid buttons --}}
@@ -247,6 +263,19 @@
                                 {{-- Feedback message --}}
                                 <div id="bidFeedback" class="hidden text-xs px-3 py-2.5 rounded-xl text-center font-semibold mb-3"></div>
                             </form>
+                            @else
+                            <div class="text-center py-4 bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                                <i class="fas fa-lock text-3xl text-slate-400 mb-3"></i>
+                                <h3 class="font-bold text-slate-800 mb-1">Garantía de Seriedad</h3>
+                                <p class="text-xs text-slate-500 mb-4">Para pujar, debes inscribirte realizando una retención temporal (hold) de <strong>${{ number_format($auction->guarantee_amount, 2) }} MXN</strong> en tu tarjeta. Si no ganas, se libera automáticamente.</p>
+                                <form action="{{ route('store.auctions.register', $auction) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="glow-button bg-[#009ee3] text-white font-bold px-6 py-3 rounded-xl text-sm w-full">
+                                        Pagar Hold con MercadoPago
+                                    </button>
+                                </form>
+                            </div>
+                            @endif
                             @else
                             <div class="text-center py-4">
                                 <p class="text-slate-500 text-sm mb-3">Debes iniciar sesión para pujar.</p>
@@ -337,7 +366,12 @@
                                 </div>
                                 @endif
                                 <div>
-                                    <div class="text-sm font-bold text-slate-800">{{ $bid->user->name }}</div>
+                                    <div class="text-sm font-bold text-slate-800">
+                                        {{ $bid->user->name }}
+                                        @if($bid->is_auto)
+                                            <span class="ml-2 text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded uppercase font-bold"><i class="fas fa-robot"></i> Auto-Puja</span>
+                                        @endif
+                                    </div>
                                     <div class="text-xs text-slate-400">{{ $bid->created_at->diffForHumans() }}</div>
                                 </div>
                             </div>
@@ -428,7 +462,7 @@ if (document.querySelector('.main-swiper')) {
 }
 const AUCTION_ID   = {{ $auction->id }};
 const AUCTION_STATUS = '{{ $auction->status }}';
-const END_TIME_TS  = {{ $auction->end_time->timestamp }};
+let END_TIME_TS  = {{ $auction->end_time->timestamp }};
 const MIN_INC      = {{ $auction->min_increment }};
 
 // ---- COUNTDOWN ----
@@ -474,6 +508,22 @@ document.querySelectorAll('.quick-bid').forEach(btn => {
 });
 
 // ---- BID FORM ----
+const isProxyToggle = document.getElementById('isProxyBid');
+const bidBtnObj = document.getElementById('bidBtn');
+if (isProxyToggle && bidBtnObj) {
+    isProxyToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            bidBtnObj.innerHTML = '<i class="fas fa-robot"></i> Fijar Tope';
+            bidBtnObj.classList.replace('from-amber-400', 'from-indigo-500');
+            bidBtnObj.classList.replace('to-orange-500', 'to-purple-600');
+        } else {
+            bidBtnObj.innerHTML = '<i class="fas fa-gavel"></i> ¡Pujar!';
+            bidBtnObj.classList.replace('from-indigo-500', 'from-amber-400');
+            bidBtnObj.classList.replace('to-purple-600', 'to-orange-500');
+        }
+    });
+}
+
 const bidForm = document.getElementById('bidForm');
 if (bidForm) {
     bidForm.addEventListener('submit', async e => {
@@ -488,6 +538,8 @@ if (bidForm) {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Procesando...';
 
         try {
+            const isProxy = document.getElementById('isProxyBid') ? document.getElementById('isProxyBid').checked : false;
+
             const res = await fetch(`/store/auctions/${AUCTION_ID}/bids`, {
                 method: 'POST',
                 headers: {
@@ -497,13 +549,28 @@ if (bidForm) {
                         '{{ csrf_token() }}',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ amount })
+                body: JSON.stringify({ amount, is_proxy: isProxy })
             });
             const data = await res.json();
             if (res.ok) {
-                showFeedback('success', '¡Puja registrada con éxito!');
+                showFeedback('success', data.message || '¡Puja registrada con éxito!');
                 document.getElementById('bidAmount').value = '';
-                // Optimistically update own UI (real update via websocket)
+                if (isProxy) {
+                    const infoEl = document.getElementById('currentMaxBidInfo');
+                    if(infoEl) {
+                        infoEl.textContent = 'Tu puja máxima activa: $' + amount.toLocaleString('es-MX', {minimumFractionDigits:2});
+                        infoEl.classList.remove('hidden');
+                    }
+                }
+                // Optimistically update own UI (real update via websocket for others)
+                if (data.bid) {
+                    const formattedBid = {
+                        amount: data.bid.amount,
+                        user_name: data.bid.user ? data.bid.user.name : '{{ auth()->user()->name ?? 'Tú' }}',
+                        is_auto: data.bid.is_auto
+                    };
+                    prependBid(formattedBid);
+                }
                 updatePriceUI(data.current_price, MIN_INC);
             } else {
                 showFeedback('error', data.message || 'Error al procesar la puja.');
@@ -562,6 +629,8 @@ function prependBid(bid) {
     // Remove crown from old top bid
     container.querySelectorAll('[data-top]').forEach(el => el.removeAttribute('data-top'));
 
+    const autoBadge = bid.is_auto ? '<span class="ml-2 text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded uppercase font-bold"><i class="fas fa-robot"></i> Auto-Puja</span>' : '';
+
     const row = document.createElement('div');
     row.className = 'bid-enter flex items-center justify-between px-5 py-3.5 bg-amber-50/50';
     row.dataset.top = '1';
@@ -571,7 +640,7 @@ function prependBid(bid) {
                 <i class="fas fa-crown text-xs"></i>
             </div>
             <div>
-                <div class="text-sm font-bold text-slate-800">${bid.user_name}</div>
+                <div class="text-sm font-bold text-slate-800">${bid.user_name} ${autoBadge}</div>
                 <div class="text-xs text-slate-400">Ahora mismo</div>
             </div>
         </div>
@@ -618,11 +687,30 @@ if (AUCTION_STATUS === 'active') {
     }
 
     const pusher = new Pusher(isPusher ? '{{ env("PUSHER_APP_KEY") }}' : '{{ env("REVERB_APP_KEY") }}', pusherConfig);
+    const hammerSound = new Audio('https://actions.google.com/sounds/v1/tools/ratchet_wrench.ogg'); // Un sonido provisional gratis
+
+    let soundUnlocked = false;
+    document.body.addEventListener('click', () => {
+        if (!soundUnlocked) {
+            hammerSound.play().then(() => {
+                hammerSound.pause();
+                hammerSound.currentTime = 0;
+                soundUnlocked = true;
+            }).catch(() => {});
+        }
+    }, { once: true });
 
     const channel = pusher.subscribe('auction.' + AUCTION_ID);
     channel.bind('App\\Events\\BidPlaced', data => {
         if (data.bid) prependBid(data.bid);
         if (data.current_price) updatePriceUI(parseFloat(data.current_price), MIN_INC);
+        if (data.end_time) {
+            END_TIME_TS = data.end_time;
+        }
+        if (soundUnlocked) {
+            hammerSound.currentTime = 0;
+            hammerSound.play().catch(e => console.log('Audio autoplay blocked'));
+        }
     });
     
     channel.bind('App\\Events\\AuctionStatusChanged', data => {

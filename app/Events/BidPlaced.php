@@ -52,8 +52,10 @@ class BidPlaced implements ShouldBroadcastNow
                 'amount' => $this->bid->amount,
                 'user_name' => $this->bid->user->name,
                 'created_at' => $this->bid->created_at->toDateTimeString(),
+                'is_auto' => $this->bid->is_auto,
             ],
             'current_price' => $this->auction->current_price,
+            'end_time' => $this->auction->end_time->timestamp,
             'bids_count' => $this->auction->bids()->count(),
         ];
     }

@@ -48,23 +48,59 @@ class BidController extends Controller
                 ], 422);
             }
 
+            $isProxy = $request->boolean('is_proxy');
+            
+            // Si es una puja automática, actualizamos la tabla registration
+            if ($isProxy) {
+                $registration = \App\Models\AuctionRegistration::where('auction_id', $auction->id)
+                    ->where('user_id', auth()->id())
+                    ->first();
+                if ($registration) {
+                    $registration->update(['max_bid' => $request->amount]);
+                }
+                
+                // Si la cantidad ingresada como tope es mayor o igual a la puja mínima requerida, pujamos el mínimo
+                $bidAmount = $minAllowedBid;
+            } else {
+                $bidAmount = $request->amount;
+            }
+
             $bid = Bid::create([
                 'auction_id' => $auction->id,
                 'user_id' => auth()->id(),
-                'amount' => $request->amount,
+                'amount' => $bidAmount,
             ]);
 
-            $auction->current_price = $request->amount;
+            $auction->current_price = $bidAmount;
+            
+            // Anti-Sniping: Si quedan 60 segundos o menos, extender 3 minutos
+            if (now()->diffInSeconds($auction->end_time) <= 60) {
+                $auction->end_time = $auction->end_time->addMinutes(3);
+            }
+            
             $auction->save();
 
             DB::commit();
 
-            // Emitir evento
+            // Emitir evento de la puja principal
             broadcast(new BidPlaced($bid, $auction))->toOthers();
+            
+            // Auto-bidding (Proxy Bidding) resolution - Despachar job con retraso
+            $delay = rand(3, 6);
+            $secondsLeft = now()->diffInSeconds($auction->end_time);
+            if ($secondsLeft < $delay) {
+                $delay = max(0, $secondsLeft - 1);
+            }
+            
+            if ($delay > 0) {
+                dispatch(new \App\Jobs\ProcessProxyBids($auction->id))->delay(now()->addSeconds($delay));
+            } else {
+                dispatch(new \App\Jobs\ProcessProxyBids($auction->id));
+            }
 
             return response()->json([
-                'message' => 'Puja realizada con éxito.',
-                'bid' => $bid,
+                'message' => $isProxy ? 'Auto-puja configurada con éxito.' : 'Puja realizada con éxito.',
+                'bid' => $bid->load('user'),
                 'current_price' => $auction->current_price
             ]);
 

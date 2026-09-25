@@ -13,6 +13,7 @@ class Auction extends Model
         'start_price',
         'current_price',
         'min_increment',
+        'guarantee_amount',
         'start_time',
         'end_time',
         'payment_deadline',

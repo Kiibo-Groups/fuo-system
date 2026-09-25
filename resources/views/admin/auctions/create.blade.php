@@ -88,7 +88,7 @@
                         <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-black">2</span>
                         Configuración de Precios
                     </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Precio Base <span class="text-red-400">*</span></label>
                             <div class="relative">
@@ -111,6 +111,18 @@
                                        class="w-full pl-8 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 @error('min_increment') border-red-300 @enderror">
                             </div>
                             @error('min_increment')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Garantía Seriedad <span class="text-red-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                <input type="number" name="guarantee_amount" step="0.01" min="0"
+                                       value="{{ old('guarantee_amount', 5000) }}"
+                                       class="w-full pl-8 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 @error('guarantee_amount') border-red-300 @enderror">
+                            </div>
+                            @error('guarantee_amount')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>

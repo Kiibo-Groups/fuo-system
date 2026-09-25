@@ -33,6 +33,14 @@ class AuctionViewController extends Controller
         }
 
         $auction->load(['generator.assignedBranch', 'winner', 'bids.user']);
-        return view('client.auctions.show', compact('auction'));
+        
+        $registration = \App\Models\AuctionRegistration::where('auction_id', $auction->id)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        $isRegistered = $registration && $registration->status === 'approved';
+        $myMaxBid = $registration ? $registration->max_bid : null;
+
+        return view('client.auctions.show', compact('auction', 'isRegistered', 'myMaxBid'));
     }
 }

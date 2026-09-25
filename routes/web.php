@@ -179,6 +179,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/auctions/{auction}', [\App\Http\Controllers\Client\AuctionViewController::class, 'show'])->name('auctions.show'); // name: store.auctions.show
         // Pujas (Solo clientes)
         Route::post('/auctions/{auction}/bids', [BidController::class, 'store'])->name('bids.store');
+        
+        // Registro de Garantía
+        Route::post('/auctions/{auction}/register', [App\Http\Controllers\Client\AuctionRegistrationController::class, 'store'])->name('auctions.register');
+        Route::get('/auctions/{auction}/register/success', [App\Http\Controllers\Client\AuctionRegistrationController::class, 'success'])->name('auctions.register.success');
     });
 
     /*

@@ -39,6 +39,7 @@ class AuctionController extends Controller
             'branch_id' => 'nullable|exists:branches,id',
             'start_price' => 'required|numeric|min:0',
             'min_increment' => 'required|numeric|min:1',
+            'guarantee_amount' => 'required|numeric|min:0',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
             'payment_deadline' => 'required|date|after:end_time',

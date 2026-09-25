@@ -149,6 +149,40 @@
                 </dl>
             </div>
 
+            {{-- Proxy Bidders (Admin Only) --}}
+            <div class="bg-indigo-50/50 rounded-3xl border border-indigo-100 shadow-sm p-5">
+                <h4 class="font-bold text-indigo-900 mb-4 text-sm flex items-center gap-2">
+                    <i class="fas fa-robot text-indigo-500"></i> Auto-Pujas Activas
+                </h4>
+                @php
+                    $proxyBidders = \App\Models\AuctionRegistration::with('user')
+                        ->where('auction_id', $auction->id)
+                        ->whereNotNull('max_bid')
+                        ->orderBy('max_bid', 'desc')
+                        ->get();
+                @endphp
+                @if($proxyBidders->count() > 0)
+                    <ul class="space-y-3">
+                        @foreach($proxyBidders as $proxy)
+                        <li class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-indigo-50">
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">{{ $proxy->user->name }}</div>
+                                <div class="text-xs text-slate-500">Tope Máximo</div>
+                            </div>
+                            <div class="text-indigo-600 font-black text-base">
+                                ${{ number_format($proxy->max_bid, 2) }}
+                            </div>
+                        </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="text-center py-3">
+                        <i class="fas fa-sleep text-indigo-200 text-2xl mb-2"></i>
+                        <p class="text-xs text-indigo-400 font-medium">Ningún usuario tiene Auto-Puja configurada.</p>
+                    </div>
+                @endif
+            </div>
+
             {{-- Public Link --}}
             <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4">
                 <div class="text-xs font-bold text-slate-500 mb-2">Enlace Público</div>
